@@ -6,20 +6,9 @@ app.py - Streamlit web app for CKD risk prediction.
 import streamlit as st
 
 from predict import load_bundle, predict_patient
-from prepare import BINARY_MAPS, FEATURE_INFO
+from prepare import BINARY_MAPS, FEATURE_INFO, FORM_GROUPS, FORM_STEP
 
 st.set_page_config(page_title="CKD Risk Predictor", layout="wide")
-
-GROUPS = {
-    "Vitals": ["age", "bp"],
-    "Urine test": ["sg", "al", "su", "rbc", "pc", "pcc", "ba"],
-    "Blood test": ["bgr", "bu", "sc", "sod", "pot", "hemo", "pcv", "wc", "rc"],
-    "Medical history": ["htn", "dm", "cad", "appet", "pe", "ane"],
-}
-# input step size / display format for numeric fields
-STEP = {"sg": (0.005, "%.3f"), "al": (1.0, "%.0f"), "su": (1.0, "%.0f"),
-        "sc": (0.1, "%.1f"), "pot": (0.1, "%.1f"), "hemo": (0.1, "%.1f"),
-        "rc": (0.1, "%.1f"), "wc": (100.0, "%.0f")}
 
 
 @st.cache_resource
@@ -47,7 +36,7 @@ st.caption(
 with st.form("patient"):
     record = {}
     left, right = st.columns(2)
-    for i, (group, feats) in enumerate(GROUPS.items()):
+    for i, (group, feats) in enumerate(FORM_GROUPS.items()):
         with (left if i % 2 == 0 else right):
             st.subheader(group)
             for f in feats:
@@ -57,9 +46,9 @@ with st.form("patient"):
                     options = list(BINARY_MAPS[f])          # first option = encoded 0
                     record[f] = st.selectbox(label, options, index=int(round(defaults[f])), key=f)
                 else:
-                    step, fmt = STEP.get(f, (1.0, "%.0f"))
-                    record[f] = st.number_input(label, value=float(defaults[f]), step=step,
-                                                format=fmt, min_value=0.0, key=f)
+                    step, decimals = FORM_STEP.get(f, (1, 0))
+                    record[f] = st.number_input(label, value=float(defaults[f]), step=float(step),
+                                                format=f"%.{decimals}f", min_value=0.0, key=f)
     submitted = st.form_submit_button("Predict", type="primary")
 
 if submitted:

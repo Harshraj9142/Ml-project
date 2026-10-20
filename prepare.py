@@ -63,6 +63,17 @@ FEATURE_INFO = {
     "ane":   ("Anemia", ""),
 }
 
+# How the web forms (app.py, and api.py for the Next.js UI) group and step the fields.
+FORM_GROUPS = {
+    "Vitals": ["age", "bp"],
+    "Urine test": ["sg", "al", "su", "rbc", "pc", "pcc", "ba"],
+    "Blood test": ["bgr", "bu", "sc", "sod", "pot", "hemo", "pcv", "wc", "rc"],
+    "Medical history": ["htn", "dm", "cad", "appet", "pe", "ane"],
+}
+# numeric field -> (step size, decimals shown); fields not listed step by 1 with no decimals
+FORM_STEP = {"sg": (0.005, 3), "al": (1, 0), "su": (1, 0), "sc": (0.1, 1), "pot": (0.1, 1),
+             "hemo": (0.1, 1), "rc": (0.1, 1), "wc": (100, 0)}
+
 _MISSING_TOKENS = {"?", "", "nan", "<na>", "none"}
 _ALREADY_ENCODED = {"0": 0, "1": 1, "0.0": 0, "1.0": 1}
 

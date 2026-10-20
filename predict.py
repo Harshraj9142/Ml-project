@@ -17,6 +17,20 @@ from prepare import clean_frame
 
 DEFAULT_MODEL_PATH = Path(__file__).parent / "models" / "ckd_model.joblib"
 
+# Two example patients for demos (this script's demo and the Next.js UI's example buttons).
+_HEALTHY_LIKE = {"age": 40, "bp": 70, "sg": 1.025, "al": 0, "su": 0, "rbc": "normal",
+                 "pc": "normal", "pcc": "notpresent", "ba": "notpresent", "bgr": 100,
+                 "bu": 30, "sc": 0.9, "sod": 142, "pot": 4.4, "hemo": 15.5, "pcv": 46,
+                 "wc": 7000, "rc": 5.2, "htn": "no", "dm": "no", "cad": "no",
+                 "appet": "good", "pe": "no", "ane": "no"}
+EXAMPLES = {
+    "healthy-looking": _HEALTHY_LIKE,
+    "CKD-looking": {**_HEALTHY_LIKE, "age": 62, "bp": 90, "sg": 1.010, "al": 3, "su": 1,
+                    "pc": "abnormal", "bu": 80, "sc": 4.5, "sod": 131, "hemo": 9.8, "pcv": 30,
+                    "rc": 3.6, "htn": "yes", "dm": "yes", "appet": "poor", "pe": "yes",
+                    "ane": "yes"},
+}
+
 
 def load_bundle(path=DEFAULT_MODEL_PATH):
     path = Path(path)
@@ -40,15 +54,7 @@ def predict_patient(record: dict, bundle=None, threshold: float = 0.5) -> dict:
 
 if __name__ == "__main__":
     bundle = load_bundle()
-    healthy_like = {"age": 40, "bp": 70, "sg": 1.025, "al": 0, "su": 0, "rbc": "normal",
-                    "pc": "normal", "pcc": "notpresent", "ba": "notpresent", "bgr": 100,
-                    "bu": 30, "sc": 0.9, "sod": 142, "pot": 4.4, "hemo": 15.5, "pcv": 46,
-                    "wc": 7000, "rc": 5.2, "htn": "no", "dm": "no", "cad": "no",
-                    "appet": "good", "pe": "no", "ane": "no"}
-    ckd_like = {**healthy_like, "age": 62, "bp": 90, "sg": 1.010, "al": 3, "su": 1,
-                "pc": "abnormal", "bu": 80, "sc": 4.5, "sod": 131, "hemo": 9.8, "pcv": 30,
-                "rc": 3.6, "htn": "yes", "dm": "yes", "appet": "poor", "pe": "yes", "ane": "yes"}
     print("Model:", bundle["model_name"])
-    for name, rec in [("healthy-looking", healthy_like), ("CKD-looking", ckd_like)]:
+    for name, rec in EXAMPLES.items():
         r = predict_patient(rec, bundle)
         print(f"{name:16s} -> {r['prediction']:8s} (P(CKD) = {r['probability_ckd']:.2f})")
