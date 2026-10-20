@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+/* Colour tokens: light by default, dark when the operating system asks for it. */
+:root {
+  --background: #f5f6f8;
+  --surface: #ffffff;
+  --surface-muted: #f0f2f5;
+  --raised: #ffffff; /* selected option in the two-button switches */
+  --border: #dfe3e8;
+  --foreground: #161a20;
+  --muted: #5b6472;
+  --accent: #2554c7;
+  --accent-hover: #1d46ab;
+  --on-accent: #ffffff;
+  --risk-high: #b42318;
+  --risk-high-soft: #fdecea;
+  --risk-low: #18794a;
+  --risk-low-soft: #e6f4ec;
+  --track: #e4e7ec;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0e1116;
+    --surface: #161a21;
+    --surface-muted: #1e232c;
+    --raised: #39414f;
+    --border: #2b313c;
+    --foreground: #e8ebf0;
+    --muted: #9ba4b3;
+    --accent: #7c9dff;
+    --accent-hover: #95b0ff;
+    --on-accent: #0b1020;
+    --risk-high: #ff8f80;
+    --risk-high-soft: #3b1e1c;
+    --risk-low: #62d39b;
+    --risk-low-soft: #15301f;
+    --track: #282e38;
+  }
+}
+
+/* Make the tokens available as Tailwind classes: bg-surface, text-muted, border-border ... */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-raised: var(--raised);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-risk-high: var(--risk-high);
+  --color-risk-high-soft: var(--risk-high-soft);
+  --color-risk-low: var(--risk-low);
+  --color-risk-low-soft: var(--risk-low-soft);
+  --color-track: var(--track);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
