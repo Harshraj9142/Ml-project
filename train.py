@@ -7,8 +7,8 @@ Steps
   1. Load + clean data                (prepare.py)
   2. EDA plots                        -> reports/figures/
   3. Stratified 80/20 train/test split
-  4. Compare 6-7 models with 5-fold cross-validation (train set only)
-  5. Tune the best model with GridSearchCV
+  4. Compare the 6 course classifiers with 5-fold cross-validation (train set only)
+  5. Tune the best one that gives a probability, with GridSearchCV
   6. Evaluate once on the held-out test set
   7. Explain the model (permutation importance)
   8. Save model bundle + metrics      -> models/, reports/
@@ -30,21 +30,20 @@ import pandas as pd
 import seaborn as sns
 import sklearn
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, Perceptron
 from sklearn.metrics import (ConfusionMatrixDisplay, RocCurveDisplay, accuracy_score,
                              classification_report, f1_score, precision_score,
                              recall_score, roc_auc_score)
 from sklearn.model_selection import (GridSearchCV, StratifiedKFold, cross_validate,
                                      train_test_split)
+from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
 
+from custom_models import LinearRegressionClassifier, SingleLayerPerceptron
 from prepare import BINARY_COLS, FEATURE_INFO, FEATURES, NUMERIC_COLS, load_data
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -54,41 +53,30 @@ SCORING = {"accuracy": "accuracy", "precision": "precision",
 
 
 # --------------------------------------------------------------------------- #
-# Models to compare: (estimator, needs feature scaling?, grid for tuning)
+# Models to compare - only the classifiers from the ML course list:
+# (estimator, needs feature scaling?, grid for tuning)
 # --------------------------------------------------------------------------- #
 def get_models():
-    models = {
+    return {
         "Logistic Regression": (
             LogisticRegression(max_iter=2000), True,
             {"model__C": [0.01, 0.1, 1, 10]}),
         "KNN": (
             KNeighborsClassifier(), True,
             {"model__n_neighbors": [3, 5, 7, 9, 11], "model__weights": ["uniform", "distance"]}),
-        "SVM": (
-            SVC(probability=True, random_state=RANDOM_STATE), True,
-            {"model__C": [0.1, 1, 10], "model__kernel": ["linear", "rbf"]}),
-        "Decision Tree": (
-            DecisionTreeClassifier(random_state=RANDOM_STATE), False,
-            {"model__max_depth": [3, 5, 8, None], "model__min_samples_leaf": [1, 3, 5]}),
-        "Random Forest": (
-            RandomForestClassifier(random_state=RANDOM_STATE), False,
-            {"model__n_estimators": [200, 400], "model__max_depth": [None, 6, 10],
-             "model__min_samples_leaf": [1, 2]}),
-        "Gradient Boosting": (
-            GradientBoostingClassifier(random_state=RANDOM_STATE), False,
-            {"model__n_estimators": [100, 200], "model__learning_rate": [0.05, 0.1],
-             "model__max_depth": [2, 3]}),
+        "Naive Bayes": (
+            GaussianNB(), False,
+            {"model__var_smoothing": [1e-9, 1e-7, 1e-5, 1e-3]}),
+        "PLA (Perceptron)": (
+            Perceptron(random_state=RANDOM_STATE), True,
+            {"model__eta0": [0.1, 1.0], "model__penalty": [None, "l2"]}),
+        "SLP (our own code)": (
+            SingleLayerPerceptron(random_state=RANDOM_STATE), True,
+            {"model__epochs": [10, 50, 100]}),
+        "Linear Regression": (
+            LinearRegressionClassifier(), True,
+            {}),
     }
-    try:  # optional: pip install xgboost
-        from xgboost import XGBClassifier
-        models["XGBoost"] = (
-            XGBClassifier(eval_metric="logloss", random_state=RANDOM_STATE), False,
-            {"model__n_estimators": [100, 300], "model__max_depth": [2, 4],
-             "model__learning_rate": [0.05, 0.1]})
-    except Exception as e:  # not installed, or installed but can't load (Mac: missing libomp)
-        print(f"(xgboost unavailable - skipping it: {type(e).__name__}. "
-              "`pip install xgboost`, and on Mac also `brew install libomp`)")
-    return models
 
 
 def make_pipeline(estimator, scale: bool) -> Pipeline:
@@ -209,7 +197,12 @@ def main():
     plt.tight_layout(); plt.savefig(fig_dir / "05_model_comparison.png", dpi=120); plt.close()
 
     # 5. Tune the best model -------------------------------------------------
-    best_name = comp.iloc[0]["model"]
+    # the app shows the risk as a %, so the final model must give a probability;
+    # PLA, SLP and linear regression only give yes/no (or a raw score)
+    ranked = list(comp["model"])
+    best_name = next(n for n in ranked if hasattr(models[n][0], "predict_proba"))
+    if best_name != ranked[0]:
+        print(f"\n{ranked[0]} scored highest but can't give a probability -> using {best_name}")
     est, scale, grid = models[best_name]
     print(f"\nBest in CV: {best_name} -> tuning with GridSearchCV ...")
     search = GridSearchCV(make_pipeline(est, scale), grid, cv=cv, scoring="f1", n_jobs=-1)
