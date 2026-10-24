@@ -10,7 +10,7 @@ Steps
   4. Compare the 6 course classifiers with 5-fold cross-validation (train set only)
   5. Tune the best one that gives a probability, with GridSearchCV
   6. Evaluate once on the held-out test set
-  7. Explain the model (permutation importance)
+  7. Explain the model (which features matter most)
   8. Save model bundle + metrics      -> models/, reports/
 
 Imputation and scaling live INSIDE the scikit-learn Pipeline, so they are
@@ -93,14 +93,12 @@ def make_pipeline(estimator, scale: bool) -> Pipeline:
 def feature_importance(model: Pipeline, X_test, y_test):
     """Importance per original feature.
 
-    Tree models -> built-in importances; linear models -> |coefficient| on scaled
-    inputs; anything else -> permutation importance measured with log-loss
+    Linear models (logistic regression) -> |coefficient| on scaled inputs;
+    others (KNN, Naive Bayes) -> permutation importance measured with log-loss
     (F1/accuracy are too coarse when the model is near-perfect).
     """
     est = model.named_steps["model"]
     # the ColumnTransformer outputs columns in NUMERIC_COLS + BINARY_COLS order == FEATURES
-    if hasattr(est, "feature_importances_"):
-        return pd.Series(est.feature_importances_, index=FEATURES), "built-in importance"
     if hasattr(est, "coef_") and np.ndim(est.coef_) == 2 and est.coef_.shape[1] == len(FEATURES):
         return pd.Series(np.abs(est.coef_[0]), index=FEATURES), "|coefficient| (scaled inputs)"
     pi = permutation_importance(model, X_test, y_test, scoring="neg_log_loss", n_repeats=20,
