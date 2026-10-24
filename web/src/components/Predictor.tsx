@@ -5,41 +5,45 @@ import PatientForm from "@/components/PatientForm";
 import ResultPanel from "@/components/ResultPanel";
 import { fetchMeta, predict, toFormValues, type FormValues, type Meta, type Prediction } from "@/lib/api";
 
-/** Loads the form definition from the Python API, then shows the risk checker. */
-export default function Predictor() {
+/**
+ * Loads the form definition from the Python API, then shows the risk checker.
+ * `api` is "/api" for Part 1 (diagnosis) or "/api/future" for Part 2 (future risk).
+ */
+export default function Predictor({ api }: { api: string }) {
   const [meta, setMeta] = useState<Meta | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0); // bumped by "Try again" to reload
 
   useEffect(() => {
     let cancelled = false;
-    fetchMeta()
+    fetchMeta(api)
       .then((m) => {
         if (!cancelled) setMeta(m);
       })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
+      .catch((err) => {
+        if (!cancelled) setFailure(err instanceof Error ? err.message : "Unknown error");
       });
     return () => {
       cancelled = true;
     };
-  }, [attempt]);
+  }, [api, attempt]);
 
-  if (failed) {
+  if (failure) {
     return (
       <ApiUnavailable
+        message={failure}
         onRetry={() => {
-          setFailed(false);
+          setFailure(null);
           setAttempt((n) => n + 1);
         }}
       />
     );
   }
   if (!meta) return <Loading />;
-  return <RiskChecker meta={meta} />;
+  return <RiskChecker api={api} meta={meta} />;
 }
 
-function RiskChecker({ meta }: { meta: Meta }) {
+function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
   const [values, setValues] = useState<FormValues>(() => toFormValues(meta));
   const [result, setResult] = useState<Prediction | null>(null);
   const [stale, setStale] = useState(false); // form edited since the last prediction
@@ -57,7 +61,7 @@ function RiskChecker({ meta }: { meta: Meta }) {
     setBusy(true);
     setError(null);
     try {
-      setResult(await predict(values, meta));
+      setResult(await predict(api, values, meta));
       setStale(false);
       // on phones the result sits below the long form - bring it into view
       if (window.matchMedia("(max-width: 1023px)").matches) {
@@ -87,12 +91,14 @@ function RiskChecker({ meta }: { meta: Meta }) {
   );
 }
 
-function ApiUnavailable({ onRetry }: { onRetry: () => void }) {
+function ApiUnavailable({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div role="alert" className="max-w-2xl rounded-xl border border-border bg-surface p-6">
       <h2 className="font-semibold">Can&apos;t reach the prediction API</h2>
-      <p className="mt-2 text-sm text-muted">
-        The model runs in Python. Open a second terminal in the project folder and start it with:
+      <p className="mt-1 text-sm text-muted">{message}</p>
+      <p className="mt-3 text-sm text-muted">
+        The models run in Python. Open a second terminal in the project folder and start the API
+        with:
       </p>
       <pre className="mt-3 overflow-x-auto rounded-lg bg-surface-muted px-4 py-3 font-mono text-sm">
         {"source .venv/bin/activate\nuvicorn api:app --reload --port 8000"}

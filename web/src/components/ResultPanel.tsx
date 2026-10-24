@@ -26,8 +26,8 @@ export default function ResultPanel({ meta, result, stale, busy, error }: Props)
           <ResultBody meta={meta} result={result} stale={stale} busy={busy} />
         ) : (
           <p className="mt-3 text-sm text-muted">
-            The form starts with typical values of patients without CKD. Change any value or load
-            an example, then press <span className="font-medium text-foreground">Predict</span>.
+            {meta.labels.start} Change any value or load an example, then press{" "}
+            <span className="font-medium text-foreground">Predict</span>.
           </p>
         )}
       </section>
@@ -48,21 +48,21 @@ function ResultBody({
   busy: boolean;
 }) {
   const p = result.probability_ckd;
-  const likely = result.prediction === "CKD";
+  const high = result.positive;
   return (
     <div>
       <div className={stale || busy ? "opacity-45 transition-opacity" : "transition-opacity"}>
         <p
           className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${
-            likely ? "bg-risk-high-soft text-risk-high" : "bg-risk-low-soft text-risk-low"
+            high ? "bg-risk-high-soft text-risk-high" : "bg-risk-low-soft text-risk-low"
           }`}
         >
-          {likely ? <AlertIcon /> : <CheckIcon />}
-          {likely ? "Likely CKD" : "Unlikely CKD"}
+          {high ? <AlertIcon /> : <CheckIcon />}
+          {high ? meta.labels.positive : meta.labels.negative}
         </p>
         <p className="mt-4 text-5xl font-semibold tracking-tight tabular-nums">{formatPercent(p)}</p>
-        <p className="mt-1 text-sm text-muted">model probability of chronic kidney disease</p>
-        <Meter value={p} likely={likely} />
+        <p className="mt-1 text-sm text-muted">{meta.labels.probability}</p>
+        <Meter value={p} high={high} />
         {result.missing_features.length > 0 && (
           <p className="mt-4 text-sm text-muted">
             Not measured, so filled in with a typical value:{" "}
@@ -77,21 +77,21 @@ function ResultBody({
   );
 }
 
-/** Probability bar from 0 to 100% with a mark at the 50% cut-off between "unlikely" and "likely". */
-function Meter({ value, likely }: { value: number; likely: boolean }) {
+/** Bar from 0 to 100% with a mark at the 50% cut-off between the two answers. */
+function Meter({ value, high }: { value: number; high: boolean }) {
   const percent = Math.min(100, Math.max(0, value * 100));
   return (
     <div className="mt-5">
       <div
         role="meter"
-        aria-label="Probability of CKD"
+        aria-label="Model score"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(percent)}
         className="relative h-2.5 rounded-full bg-track"
       >
         <div
-          className={`h-full rounded-full ${likely ? "bg-risk-high" : "bg-risk-low"}`}
+          className={`h-full rounded-full ${high ? "bg-risk-high" : "bg-risk-low"}`}
           style={{ width: `${Math.max(percent, 1.5)}%` }}
         />
         <div aria-hidden className="absolute -top-1 left-1/2 h-4.5 w-0.5 -translate-x-1/2 rounded bg-foreground/50" />
@@ -106,31 +106,21 @@ function Meter({ value, likely }: { value: number; likely: boolean }) {
 }
 
 function ModelCard({ meta }: { meta: Meta }) {
-  const m = meta.metrics;
-  const stats: [string, string][] = [
-    ["Accuracy", `${(m.accuracy * 100).toFixed(1)}%`],
-    ["Recall", `${(m.recall * 100).toFixed(1)}%`],
-    ["ROC-AUC", m.roc_auc.toFixed(3)],
-  ];
   return (
     <section className="rounded-xl border border-border bg-surface p-5 text-sm">
       <h2 className="font-medium text-muted">About the model</h2>
       <p className="mt-2">
-        <span className="font-medium">{meta.model_name}</span>, tested on {m.n_test} patients it
-        never saw during training.
+        <span className="font-medium">{meta.model_name}</span>, {meta.about}
       </p>
       <dl className="mt-3 grid grid-cols-3 gap-2">
-        {stats.map(([label, value]) => (
-          <div key={label} className="rounded-lg bg-surface-muted px-3 py-2">
-            <dt className="text-xs text-muted">{label}</dt>
-            <dd className="mt-0.5 font-semibold tabular-nums">{value}</dd>
+        {meta.stats.map((stat) => (
+          <div key={stat.label} className="rounded-lg bg-surface-muted px-3 py-2">
+            <dt className="text-xs text-muted">{stat.label}</dt>
+            <dd className="mt-0.5 font-semibold tabular-nums">{stat.value}</dd>
           </div>
         ))}
       </dl>
-      <p className="mt-3 text-xs text-muted">
-        Recall = the share of CKD patients the model catches. Missing a sick patient is the
-        costly mistake.
-      </p>
+      <p className="mt-3 text-xs text-muted">{meta.stats_note}</p>
     </section>
   );
 }

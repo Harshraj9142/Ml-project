@@ -10,28 +10,34 @@ Next.js web app for live predictions (and a simpler Streamlit version).
 ```
 ckd-project/
 ├── data/
-│   └── kidney_disease.csv     <- you download this (see data/README.md)
+│   ├── kidney_disease.csv     Part 1 data (see data/README.md)
+│   └── uae_ckd_alshamsi2018.csv  Part 2 data: who develops CKD later (UAE)
 ├── prepare.py                 data loading + cleaning (shared by training and app)
 ├── custom_models.py           SLP written from scratch (PLA rule) + linear regression as a yes/no classifier
 ├── train.py                   EDA -> model comparison -> tuning -> evaluation -> save
 ├── robustness.py              repeats the model comparison 20x - is the winner just lucky?
 ├── course_models.py           confusion matrix for every algorithm + k-means / DBSCAN clustering
+├── future_ckd.py              Part 2: predict who will DEVELOP CKD (UAE hospital data)
 ├── predict.py                 predict for one new patient
 ├── api.py                     web API (FastAPI) around the saved model, used by web/
 ├── web/                       Next.js 16 web app (the user interface)
-│   ├── src/app/page.tsx         the page
-│   ├── src/components/          Predictor (loads + predicts), PatientForm, ResultPanel
+│   ├── src/app/page.tsx         Part 1 page (/): does the patient have CKD now?
+│   ├── src/app/future/page.tsx  Part 2 page (/future): will the patient develop CKD?
+│   ├── src/components/          Nav (Part 1 / Part 2 tabs), Predictor, PatientForm, ResultPanel
 │   ├── src/lib/api.ts           talks to api.py
 │   └── next.config.ts           forwards /api/* to api.py
 ├── app.py                     simpler Streamlit web app (same model)
 ├── requirements.txt
-├── models/ckd_model.joblib    created by train.py
+├── models/ckd_model.joblib    created by train.py (Part 1)
+├── models/future_ckd_model.joblib  created by future_ckd.py (Part 2)
 └── reports/                   created by the scripts above
-    ├── figures/01..11_*.png   charts for your report / slides
+    ├── figures/01..14_*.png   charts for your report / slides (15..17 = web app screenshots)
     ├── model_comparison.csv
     ├── robustness_check.csv
     ├── course_models.csv
     ├── course_clustering.csv
+    ├── future_model_comparison.csv
+    ├── future_ckd_metrics.json
     └── metrics.json
 ```
 
@@ -49,7 +55,9 @@ python train.py
 python robustness.py
 # 4. confusion matrix for every algorithm + k-means / DBSCAN clustering (~30 s)
 python course_models.py
-# 5. try the saved model from the terminal
+# 5. Part 2 - predict who will develop CKD later, UAE data (~1 min)
+python future_ckd.py
+# 6. try the saved model from the terminal
 python predict.py
 ```
 
@@ -75,7 +83,13 @@ npm install          # first time only (needs Node.js 20.9 or newer)
 npm run dev
 ```
 
-Then open http://localhost:3000. Restart terminal 1 after re-training the model.
+Then open http://localhost:3000. The tabs at the top switch between the two pages:
+
+- **Part 1 · Diagnose CKD** (`/`) - 24 routine blood/urine tests -> probability of CKD now
+- **Part 2 · Future risk** (`/future`) - age, history, medicines, eGFR, blood pressure ... ->
+  risk score for developing CKD stage 3-5 later (needs `python future_ckd.py` run once)
+
+Both pages have example-patient buttons for demos. Restart terminal 1 after re-training a model.
 
 If `npm install` fails with `EACCES ... _cacache`, your npm cache has files owned by root
 (an old npm bug). Fix it once with `sudo chown -R $(id -u):$(id -g) ~/.npm`, then retry.
@@ -129,8 +143,8 @@ UCI Chronic Kidney Disease dataset - 400 patients from India (250 CKD, 150 not C
 8. **Explainability** - size of each feature's coefficient in the logistic regression.
 9. **Clustering** - k-means and DBSCAN on all patients with the diagnosis hidden: do
    patients group into CKD / not CKD by themselves?
-10. **Deployment** - saved with joblib, served by a FastAPI web API (`api.py`) to a Next.js
-    web app (`web/`); a simpler Streamlit form (`app.py`) uses the same model.
+10. **Deployment** - both models saved with joblib, served by a FastAPI web API (`api.py`) to
+    a two-page Next.js web app (`web/`); a simpler Streamlit form (`app.py`) uses the Part 1 model.
 
 ## Results
 
@@ -186,6 +200,46 @@ and `11_clustering.png`):
   1.75 to 5, every patient it marks as an outlier has CKD - healthy patients look alike, CKD
   patients are each abnormal in their own way.
 
+## Part 2 - predicting who will develop CKD (`future_ckd.py`)
+
+Part 1 diagnoses CKD that is already present - easy, because sick patients' tests are
+clearly abnormal. Part 2 asks the harder, more useful screening question: of patients who
+do **not** have CKD today (all start with eGFR >= 60), who will develop CKD stage 3-5 in
+the next years? Real hospital data: 491 adults at Tawam Hospital, UAE, followed 2008-2017
+(Al-Shamsi et al., PLOS ONE 2018); 56 (11.4%) developed CKD. Inputs: age, sex, diabetes,
+hypertension, smoking, heart disease, medicines, cholesterol, HbA1c, creatinine, eGFR,
+blood pressure, BMI at the start. Same method as Part 1 (stratified 80/20 split, pipeline,
+5-fold CV repeated 10 times, tune, test once); charts 12-14. The saved model powers the web
+app's **Part 2 · Future risk** page.
+
+| Model (5-fold CV x 10, 392 training patients) | ROC-AUC | Recall | Precision | Accuracy |
+|---|---|---|---|---|
+| **Logistic Regression (balanced class weights)** | **0.855** | **0.687** | 0.320 | 0.796 |
+| Logistic Regression | 0.852 | 0.213 | 0.379 | 0.868 |
+| Linear Regression | 0.838 | 0.136 | 0.592 | 0.891 |
+| Naive Bayes | 0.828 | 0.682 | 0.324 | 0.798 |
+| KNN | 0.775 | 0.089 | 0.229 | 0.869 |
+| SLP (our own code) | 0.756 | 0.298 | 0.268 | 0.833 |
+| PLA (Perceptron) | 0.720 | 0.269 | 0.243 | 0.847 |
+| Always "no CKD" (baseline) | 0.500 | 0.000 | 0.000 | 0.885 |
+
+**Final model: Logistic Regression with balanced class weights, C = 0.1** (CV ROC-AUC 0.863).
+Test set (99 patients, 11 developed CKD): ROC-AUC 0.908, recall 0.818 (caught 9 of 11),
+precision 0.450 (11 false alarms), accuracy 0.869.
+
+- **Accuracy is misleading when the event is rare:** always answering "no CKD" scores
+  88.5-88.9% accuracy but catches nobody. Plain logistic regression catches only 21% at the
+  0.5 cut-off; giving the rare CKD patients more weight (`class_weight="balanced"`) raises
+  recall to 69% with the same ROC-AUC.
+- **Not linearly separable:** our SLP still makes 54-64 mistakes per epoch after 100 epochs
+  (Part 1 data reached 0 in 3 epochs), which is why PLA/SLP do worst here.
+- **Realistic difficulty:** ROC-AUC 0.86-0.91 for predicting the future vs ~1.00 for
+  diagnosing CKD that is already there.
+- **Risk factors** (chart 14): lower eGFR, higher systolic blood pressure, older age,
+  ACE-inhibitor/ARB use (a marker of existing hypertension/diabetes treatment), higher HbA1c
+  and higher creatinine - consistent with the original study (age, heart disease, diabetes,
+  smoking).
+
 ## Limitations (say these in your viva)
 
 - Only 400 patients from one region; the test set is just 80 patients, so one
@@ -197,6 +251,8 @@ and `11_clustering.png`):
   a general rule.
 - Healthy patients have far fewer missing values than CKD patients, so missingness itself
   leaks some signal.
+- Part 2 has only 56 CKD events (11 in the test set), so its test scores can move a lot
+  with one or two patients; the 10x repeated CV numbers are the more reliable ones.
 - Not a medical device; for learning only.
 
 ## Ideas to extend

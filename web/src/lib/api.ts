@@ -1,4 +1,7 @@
 // Talks to the Python API (../api.py). next.config.ts forwards /api/* to it.
+// Both pages use the same calls with a different base path:
+//   Part 1 (diagnosis)    "/api"         -> /api/meta,        /api/predict
+//   Part 2 (future risk)  "/api/future"  -> /api/future/meta, /api/future/predict
 
 export type ChoiceOption = { value: string; label: string };
 
@@ -23,13 +26,17 @@ export type Field =
 
 export type Meta = {
   model_name: string;
-  metrics: { accuracy: number; precision: number; recall: number; roc_auc: number; n_test: number };
+  about: string; // e.g. "tested on 80 patients it never saw during training."
+  stats: { label: string; value: string }[]; // test scores, already formatted
+  stats_note: string;
+  labels: { positive: string; negative: string; probability: string; start: string };
   groups: { name: string; fields: Field[] }[];
   examples: Record<string, Record<string, number | string>>;
 };
 
 export type Prediction = {
-  prediction: "CKD" | "Not CKD";
+  prediction: string;
+  positive: boolean; // true = "Likely CKD" / "Higher risk"
   probability_ckd: number;
   missing_features: string[];
 };
@@ -37,23 +44,24 @@ export type Prediction = {
 // What the user types is kept as text; it becomes numbers only when sent to the API.
 export type FormValues = Record<string, string>;
 
-export async function fetchMeta(): Promise<Meta> {
-  const res = await fetch("/api/meta", { cache: "no-store" });
-  if (!res.ok) throw new Error(`The API answered ${res.status}`);
+async function errorMessage(res: Response): Promise<string> {
+  const body = await res.json().catch(() => null);
+  return typeof body?.detail === "string" ? body.detail : `The API answered ${res.status}`;
+}
+
+export async function fetchMeta(base: string): Promise<Meta> {
+  const res = await fetch(`${base}/meta`, { cache: "no-store" });
+  if (!res.ok) throw new Error(await errorMessage(res));
   return res.json();
 }
 
-export async function predict(values: FormValues, meta: Meta): Promise<Prediction> {
-  const res = await fetch("/api/predict", {
+export async function predict(base: string, values: FormValues, meta: Meta): Promise<Prediction> {
+  const res = await fetch(`${base}/predict`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ record: toRecord(values, meta) }),
   });
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    const detail = typeof body?.detail === "string" ? body.detail : `The API answered ${res.status}`;
-    throw new Error(detail);
-  }
+  if (!res.ok) throw new Error(await errorMessage(res));
   return res.json();
 }
 
