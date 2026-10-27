@@ -1,7 +1,7 @@
 """
 course_models.py - every algorithm from the ML course list, on the CKD data.
 
-    python course_models.py      # run after train.py
+    python ml/course_models.py      # run after train.py
 
 Course topic          Where it is in this project
   PLA, SLP            train.py comparison (SLP written from scratch in custom_models.py -
@@ -38,7 +38,7 @@ from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from sklearn.model_selection import RepeatedStratifiedKFold, cross_validate, train_test_split
 from sklearn.neighbors import NearestNeighbors
 
-from prepare import load_data
+from prepare import ROOT, load_data
 from train import RANDOM_STATE, SCORING, get_models, make_pipeline
 
 
@@ -69,8 +69,8 @@ def describe_groups(groups, y, method):
 # --------------------------------------------------------------------------- #
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", default="data/kidney_disease.csv", help="path to the CSV")
-    ap.add_argument("--out", default=".", help="folder for reports/")
+    ap.add_argument("--data", default=ROOT / "data" / "kidney_disease.csv", help="path to the CSV")
+    ap.add_argument("--out", default=ROOT, help="folder for reports/")
     ap.add_argument("--repeats", type=int, default=20, help="how many times to repeat 5-fold CV")
     args = ap.parse_args()
 

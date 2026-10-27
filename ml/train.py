@@ -1,7 +1,7 @@
 """
 train.py - full training pipeline for CKD prediction.
 
-    python train.py --data data/kidney_disease.csv
+    python ml/train.py           # from the project folder
 
 Steps
   1. Load + clean data                (prepare.py)
@@ -44,7 +44,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from custom_models import LinearRegressionClassifier, SingleLayerPerceptron
-from prepare import BINARY_COLS, FEATURE_INFO, FEATURES, NUMERIC_COLS, load_data
+from prepare import BINARY_COLS, FEATURE_INFO, FEATURES, NUMERIC_COLS, ROOT, load_data
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 RANDOM_STATE = 42
@@ -150,8 +150,8 @@ def run_eda(X: pd.DataFrame, y: pd.Series, fig_dir: Path):
 # --------------------------------------------------------------------------- #
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", default="data/kidney_disease.csv", help="path to the CSV")
-    ap.add_argument("--out", default=".", help="folder for models/ and reports/")
+    ap.add_argument("--data", default=ROOT / "data" / "kidney_disease.csv", help="path to the CSV")
+    ap.add_argument("--out", default=ROOT, help="folder for models/ and reports/")
     args = ap.parse_args()
 
     out = Path(args.out)

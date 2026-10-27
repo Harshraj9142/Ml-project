@@ -1,8 +1,8 @@
 """
 robustness.py - is the winning model really the best, or just lucky?
 
-    python robustness.py                 # run after train.py
-    python robustness.py --repeats 50    # more repeats = steadier answer, but slower
+    python ml/robustness.py                 # run after train.py
+    python ml/robustness.py --repeats 50    # more repeats = steadier answer, but slower
 
 train.py compares the models with ONE 5-fold cross-validation. With only 320
 training patients, a different shuffle of the patients can change the ranking.
@@ -27,14 +27,14 @@ import pandas as pd
 import seaborn as sns
 from sklearn.model_selection import RepeatedStratifiedKFold, cross_validate, train_test_split
 
-from prepare import load_data
+from prepare import ROOT, load_data
 from train import RANDOM_STATE, SCORING, get_models, make_pipeline
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", default="data/kidney_disease.csv", help="path to the CSV")
-    ap.add_argument("--out", default=".", help="folder for reports/")
+    ap.add_argument("--data", default=ROOT / "data" / "kidney_disease.csv", help="path to the CSV")
+    ap.add_argument("--out", default=ROOT, help="folder for reports/")
     ap.add_argument("--repeats", type=int, default=20, help="how many times to repeat 5-fold CV")
     args = ap.parse_args()
 

@@ -1,8 +1,8 @@
 """
-api.py - a small web API around the saved models, for the Next.js UI in web/.
+api.py - a small web API around the saved models, for the Next.js UI in frontend/.
 
-    uvicorn api:app --reload --port 8000      # run from the project folder, after train.py
-                                              # (and future_ckd.py for the Part 2 page)
+    uvicorn backend.api:app --reload --port 8000   # run from the project folder, after
+                                                   # ml/train.py (and ml/future_ckd.py for Part 2)
 
 Part 1 - does the patient have CKD now? (models/ckd_model.joblib, from train.py)
     GET  /api/meta             model name + test scores, the form fields (groups, labels,
@@ -17,9 +17,10 @@ Both predict calls answer {"prediction": ..., "positive": true/false,
 "probability_ckd": 0.83, "missing_features": [...]}. A missing field or null means
 "not measured" and is filled in by the model's imputer.
 
-Part 1 uses the same cleaning (prepare.py) and saved model (predict.py) as app.py, so the
-Streamlit app and the Next.js UI always give the same answer. Restart after re-training.
+Part 1 uses the same cleaning (ml/prepare.py) and saved model (ml/predict.py) as the
+Streamlit app, so it and the Next.js UI always give the same answer. Restart after re-training.
 """
+import sys
 from pathlib import Path
 
 import joblib
@@ -27,14 +28,15 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ml"))  # the ML code lives in ml/
 from predict import EXAMPLES, load_bundle, predict_patient
-from prepare import BINARY_MAPS, FEATURE_INFO, FORM_GROUPS, FORM_STEP
+from prepare import BINARY_MAPS, FEATURE_INFO, FORM_GROUPS, FORM_STEP, ROOT
 
-FUTURE_MODEL_PATH = Path(__file__).parent / "models" / "future_ckd_model.joblib"
+FUTURE_MODEL_PATH = ROOT / "models" / "future_ckd_model.joblib"
 OPTION_LABELS = {"notpresent": "not present"}  # nicer text on the form buttons
 
 app = FastAPI(title="CKD Risk Predictor API")
-bundle = load_bundle()  # Part 1 - stops with "run `python train.py` first" if there is no model yet
+bundle = load_bundle()  # Part 1 - stops with "run `python ml/train.py` first" if there is no model yet
 future = joblib.load(FUTURE_MODEL_PATH) if FUTURE_MODEL_PATH.exists() else None  # Part 2
 
 
@@ -103,15 +105,16 @@ def predict(req: PredictRequest):
 def require_future() -> dict:
     if future is None:
         raise HTTPException(status_code=503, detail="The Part 2 model is missing - run "
-                            "`python future_ckd.py`, then restart the API.")
+                            "`python ml/future_ckd.py`, then restart the API.")
     return future
 
 
 @app.get("/api/future/meta")
 def future_meta():
-    m = require_future()["metrics"]
+    b = require_future()
+    m = b["metrics"]
     return {
-        "model_name": future["model_name"],
+        "model_name": b["model_name"],
         "about": f"tested on {m['n_test']} patients it never saw during training "
                  f"({m['n_test_ckd']} of them developed CKD).",
         "stats": [{"label": "ROC-AUC", "value": f"{m['test_roc_auc']:.3f}"},
@@ -123,8 +126,8 @@ def future_meta():
         "labels": {"positive": "Higher risk", "negative": "Lower risk",
                    "probability": "model risk score for developing CKD (stage 3-5) during follow-up",
                    "start": "The form starts with typical values of patients who stayed free of CKD."},
-        "groups": future["groups"],
-        "examples": future["examples"],
+        "groups": b["groups"],
+        "examples": b["examples"],
     }
 
 

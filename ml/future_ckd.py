@@ -2,7 +2,7 @@
 future_ckd.py - Part 2: predict which patients will DEVELOP chronic kidney disease
 (stage 3-5) in the following years, on real hospital data from the UAE.
 
-    python future_ckd.py
+    python ml/future_ckd.py
 
 Part 1 (train.py) diagnoses CKD that is already there - easy (~99%), because sick
 patients' blood tests are clearly abnormal. Here every patient starts WITHOUT CKD
@@ -22,7 +22,7 @@ Same 80/20 split idea as train.py: 5-fold CV repeated 10 times on the training s
 the test set is used once at the end.
 
 Outputs
-  models/future_ckd_model.joblib        (used by the web app's Part 2 page, via api.py)
+  models/future_ckd_model.joblib        (used by the web app's Part 2 page, via backend/api.py)
   reports/future_model_comparison.csv
   reports/future_ckd_metrics.json
   reports/figures/12_future_model_comparison.png
@@ -53,6 +53,7 @@ from sklearn.model_selection import (GridSearchCV, RepeatedStratifiedKFold, cros
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from prepare import ROOT
 from train import RANDOM_STATE, get_models
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -163,8 +164,8 @@ def web_form(X_train: pd.DataFrame, y_train: pd.Series) -> dict:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", default="data/uae_ckd_alshamsi2018.csv", help="path to the CSV")
-    ap.add_argument("--out", default=".", help="folder for models/ and reports/")
+    ap.add_argument("--data", default=ROOT / "data" / "uae_ckd_alshamsi2018.csv", help="path to the CSV")
+    ap.add_argument("--out", default=ROOT, help="folder for models/ and reports/")
     ap.add_argument("--repeats", type=int, default=10, help="how many times to repeat 5-fold CV")
     args = ap.parse_args()
 

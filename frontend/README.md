@@ -1,7 +1,7 @@
 # CKD Risk Predictor - web app
 
 Next.js 16 user interface for the project's two models. The models themselves run in the
-Python API (`../api.py`); this app forwards every `/api/*` request to it (see `next.config.ts`).
+Python API (`../backend/api.py`); this app forwards every `/api/*` request to it (see `next.config.ts`).
 
 | Page | Question | API calls |
 |---|---|---|
@@ -11,8 +11,8 @@ Python API (`../api.py`); this app forwards every `/api/*` request to it (see `n
 ```bash
 # 1. in the project folder: train both models once, then start the Python API
 source .venv/bin/activate
-python train.py && python future_ckd.py
-uvicorn api:app --reload --port 8000
+python ml/train.py && python ml/future_ckd.py
+uvicorn backend.api:app --reload --port 8000
 
 # 2. in this folder: start the web app
 npm install      # first time only

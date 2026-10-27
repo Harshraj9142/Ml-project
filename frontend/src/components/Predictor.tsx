@@ -101,7 +101,7 @@ function ApiUnavailable({ message, onRetry }: { message: string; onRetry: () => 
         with:
       </p>
       <pre className="mt-3 overflow-x-auto rounded-lg bg-surface-muted px-4 py-3 font-mono text-sm">
-        {"source .venv/bin/activate\nuvicorn api:app --reload --port 8000"}
+        {"source .venv/bin/activate\nuvicorn backend.api:app --reload --port 8000"}
       </pre>
       <button
         type="button"

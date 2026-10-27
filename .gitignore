@@ -3,6 +3,6 @@ __pycache__/
 .venv/
 venv/
 .ipynb_checkpoints/
-# outputs (re-create with `python train.py`)
+# outputs (re-create with the scripts in ml/)
 models/
 reports/

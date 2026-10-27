@@ -1,0 +1,7 @@
+# Editor settings only. backend/api.py and streamlit_app/app.py import the ML code from ml/
+# (they add it to sys.path themselves); this tells VS Code's type checker to look there too.
+[tool.pyright]
+extraPaths = ["ml"]
+
+[tool.pyrefly]
+search-path = [".", "ml"]

@@ -14,6 +14,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+# The project folder (one level above ml/). data/, models/ and reports/ are found from
+# here, so every script works no matter which folder it is run from.
+ROOT = Path(__file__).resolve().parent.parent
+
 NUMERIC_COLS = ["age", "bp", "sg", "al", "su", "bgr", "bu", "sc",
                 "sod", "pot", "hemo", "pcv", "wc", "rc"]
 
@@ -149,7 +153,7 @@ def load_data(path: str | Path):
 
 if __name__ == "__main__":
     import sys
-    path = sys.argv[1] if len(sys.argv) > 1 else "data/kidney_disease.csv"
+    path = sys.argv[1] if len(sys.argv) > 1 else ROOT / "data" / "kidney_disease.csv"
     X, y = load_data(path)
     print("Shape:", X.shape)
     print("Class counts (1 = CKD):\n", y.value_counts())

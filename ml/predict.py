@@ -1,7 +1,7 @@
 """
 predict.py - use the saved model on a new patient.
 
-    python predict.py            # runs a demo prediction
+    python ml/predict.py         # runs a demo prediction
 
     from predict import load_bundle, predict_patient
     predict_patient({"age": 48, "bp": 80, "sc": 1.2, "hemo": 15.4, "htn": "no", ...})
@@ -13,9 +13,9 @@ from pathlib import Path
 
 import joblib
 
-from prepare import clean_frame
+from prepare import ROOT, clean_frame
 
-DEFAULT_MODEL_PATH = Path(__file__).parent / "models" / "ckd_model.joblib"
+DEFAULT_MODEL_PATH = ROOT / "models" / "ckd_model.joblib"
 
 # Two example patients for demos (this script's demo and the Next.js UI's example buttons).
 _HEALTHY_LIKE = {"age": 40, "bp": 70, "sg": 1.025, "al": 0, "su": 0, "rbc": "normal",
@@ -35,7 +35,7 @@ EXAMPLES = {
 def load_bundle(path=DEFAULT_MODEL_PATH):
     path = Path(path)
     if not path.exists():
-        raise FileNotFoundError(f"{path} not found - run `python train.py` first.")
+        raise FileNotFoundError(f"{path} not found - run `python ml/train.py` first.")
     return joblib.load(path)
 
 

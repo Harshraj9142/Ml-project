@@ -8,29 +8,35 @@ Next.js web app for live predictions (and a simpler Streamlit version).
 ## Project structure
 
 ```
-ckd-project/
+Ml Lab Project/
+├── README.md
+├── requirements.txt
+├── pyproject.toml             editor settings only (lets VS Code find the code in ml/)
 ├── data/
 │   ├── kidney_disease.csv     Part 1 data (see data/README.md)
 │   └── uae_ckd_alshamsi2018.csv  Part 2 data: who develops CKD later (UAE)
-├── prepare.py                 data loading + cleaning (shared by training and app)
-├── custom_models.py           SLP written from scratch (PLA rule) + linear regression as a yes/no classifier
-├── train.py                   EDA -> model comparison -> tuning -> evaluation -> save
-├── robustness.py              repeats the model comparison 20x - is the winner just lucky?
-├── course_models.py           confusion matrix for every algorithm + k-means / DBSCAN clustering
-├── future_ckd.py              Part 2: predict who will DEVELOP CKD (UAE hospital data)
-├── predict.py                 predict for one new patient
-├── api.py                     web API (FastAPI) around the saved model, used by web/
-├── web/                       Next.js 16 web app (the user interface)
+├── ml/                        all the machine-learning code
+│   ├── prepare.py             data loading + cleaning (shared by training and the apps)
+│   ├── custom_models.py       SLP written from scratch (PLA rule) + linear regression as a yes/no classifier
+│   ├── train.py               Part 1: EDA -> model comparison -> tuning -> evaluation -> save
+│   ├── robustness.py          repeats the model comparison 20x - is the winner just lucky?
+│   ├── course_models.py       confusion matrix for every algorithm + k-means / DBSCAN clustering
+│   ├── future_ckd.py          Part 2: predict who will DEVELOP CKD (UAE hospital data)
+│   └── predict.py             predict for one new patient
+├── backend/
+│   └── api.py                 web API (FastAPI) around the saved models, used by frontend/
+├── frontend/                  Next.js 16 web app (the user interface)
 │   ├── src/app/page.tsx         Part 1 page (/): does the patient have CKD now?
 │   ├── src/app/future/page.tsx  Part 2 page (/future): will the patient develop CKD?
 │   ├── src/components/          Nav (Part 1 / Part 2 tabs), Predictor, PatientForm, ResultPanel
-│   ├── src/lib/api.ts           talks to api.py
-│   └── next.config.ts           forwards /api/* to api.py
-├── app.py                     simpler Streamlit web app (same model)
-├── requirements.txt
-├── models/ckd_model.joblib    created by train.py (Part 1)
-├── models/future_ckd_model.joblib  created by future_ckd.py (Part 2)
-└── reports/                   created by the scripts above
+│   ├── src/lib/api.ts           talks to backend/api.py
+│   └── next.config.ts           forwards /api/* to backend/api.py
+├── streamlit_app/
+│   └── app.py                 simpler Streamlit web app (Part 1 model)
+├── models/                    created by the ml/ scripts
+│   ├── ckd_model.joblib         Part 1, from train.py
+│   └── future_ckd_model.joblib  Part 2, from future_ckd.py
+└── reports/                   created by the ml/ scripts
     ├── figures/01..14_*.png   charts for your report / slides (15..17 = web app screenshots)
     ├── model_comparison.csv
     ├── robustness_check.csv
@@ -43,6 +49,8 @@ ckd-project/
 
 ## Setup and run
 
+Run every command from the project folder.
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
@@ -50,15 +58,15 @@ pip install -r requirements.txt
 
 # 1. put the dataset at data/kidney_disease.csv  (see data/README.md)
 # 2. train - prints CV comparison + test results, saves model and charts
-python train.py
+python ml/train.py
 # 3. check the model ranking isn't luck - repeats the CV comparison 20 times (~1 min)
-python robustness.py
+python ml/robustness.py
 # 4. confusion matrix for every algorithm + k-means / DBSCAN clustering (~30 s)
-python course_models.py
+python ml/course_models.py
 # 5. Part 2 - predict who will develop CKD later, UAE data (~1 min)
-python future_ckd.py
+python ml/future_ckd.py
 # 6. try the saved model from the terminal
-python predict.py
+python ml/predict.py
 ```
 
 Train and run the app in the same environment: a model saved with one
@@ -69,16 +77,16 @@ scikit-learn version may not load in another.
 The web app has two parts that run at the same time, each in its own terminal:
 
 ```
-browser -> Next.js app (web/, port 3000) -> Python API (api.py, port 8000) -> saved model
+browser -> Next.js app (frontend/, port 3000) -> Python API (backend/api.py, port 8000) -> saved model
 ```
 
 ```bash
-# terminal 1 - the Python API (from the project folder, after train.py)
+# terminal 1 - the Python API (from the project folder, after ml/train.py)
 source .venv/bin/activate
-uvicorn api:app --reload --port 8000
+uvicorn backend.api:app --reload --port 8000
 
 # terminal 2 - the Next.js app
-cd web
+cd frontend
 npm install          # first time only (needs Node.js 20.9 or newer)
 npm run dev
 ```
@@ -87,14 +95,14 @@ Then open http://localhost:3000. The tabs at the top switch between the two page
 
 - **Part 1 · Diagnose CKD** (`/`) - 24 routine blood/urine tests -> probability of CKD now
 - **Part 2 · Future risk** (`/future`) - age, history, medicines, eGFR, blood pressure ... ->
-  risk score for developing CKD stage 3-5 later (needs `python future_ckd.py` run once)
+  risk score for developing CKD stage 3-5 later (needs `python ml/future_ckd.py` run once)
 
 Both pages have example-patient buttons for demos. Restart terminal 1 after re-training a model.
 
 If `npm install` fails with `EACCES ... _cacache`, your npm cache has files owned by root
 (an old npm bug). Fix it once with `sudo chown -R $(id -u):$(id -g) ~/.npm`, then retry.
 
-The older Streamlit version still works on its own: `streamlit run app.py`.
+The older Streamlit version still works on its own: `streamlit run streamlit_app/app.py`.
 
 ## Algorithms (course list only)
 
@@ -143,8 +151,8 @@ UCI Chronic Kidney Disease dataset - 400 patients from India (250 CKD, 150 not C
 8. **Explainability** - size of each feature's coefficient in the logistic regression.
 9. **Clustering** - k-means and DBSCAN on all patients with the diagnosis hidden: do
    patients group into CKD / not CKD by themselves?
-10. **Deployment** - both models saved with joblib, served by a FastAPI web API (`api.py`) to
-    a two-page Next.js web app (`web/`); a simpler Streamlit form (`app.py`) uses the Part 1 model.
+10. **Deployment** - both models saved with joblib, served by a FastAPI web API (`backend/api.py`) to
+    a two-page Next.js web app (`frontend/`); a simpler Streamlit form (`streamlit_app/app.py`) uses the Part 1 model.
 
 ## Results
 

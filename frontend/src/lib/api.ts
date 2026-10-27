@@ -1,4 +1,4 @@
-// Talks to the Python API (../api.py). next.config.ts forwards /api/* to it.
+// Talks to the Python API (../backend/api.py). next.config.ts forwards /api/* to it.
 // Both pages use the same calls with a different base path:
 //   Part 1 (diagnosis)    "/api"         -> /api/meta,        /api/predict
 //   Part 2 (future risk)  "/api/future"  -> /api/future/meta, /api/future/predict

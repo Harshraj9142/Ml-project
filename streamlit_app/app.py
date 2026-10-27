@@ -1,10 +1,14 @@
 """
 app.py - Streamlit web app for CKD risk prediction.
 
-    streamlit run app.py
+    streamlit run streamlit_app/app.py      # from the project folder
 """
+import sys
+from pathlib import Path
+
 import streamlit as st
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ml"))  # the ML code lives in ml/
 from predict import load_bundle, predict_patient
 from prepare import BINARY_MAPS, FEATURE_INFO, FORM_GROUPS, FORM_STEP
 
