@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 // A kidney seen from the front, drawn with its hilum (the notch where vessels and ureter
 // join) on the right. All shapes share one 200 x 240 coordinate box.
 const OUTLINE =
@@ -21,13 +25,21 @@ export function KidneyMark({ className = "h-8 w-auto" }: { className?: string })
 
 /** Line drawing for the page header: the kidney draws itself in, with a few labelled parts. */
 export function KidneyFigure({ caption }: { caption: string }) {
+  // Once the draw-in has finished, drop the animation classes so the finished drawing stays put
+  // (otherwise a window resize or a full-page screenshot can restart it half-drawn).
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(true), 3300);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <figure className="text-muted">
       <svg
         viewBox="-62 6 352 244"
         role="img"
         aria-label="Line drawing of a kidney, with its cortex, renal artery and vein, and ureter labelled"
-        className="draw-in w-full max-w-[22rem]"
+        className={`w-full max-w-[22rem] ${settled ? "" : "draw-in"}`}
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -50,8 +62,38 @@ export function KidneyFigure({ caption }: { caption: string }) {
           <text x={203} y={101}>&amp; VEIN</text>
           <text x={206} y={206}>URETER</text>
         </g>
+        {/* once drawn: blood flows in along one vessel and out along the other, urine down the ureter */}
+        <g className={settled ? "motion-reduce:hidden" : "flow"} stroke="none">
+          <Flow path="M196 119 C176 117 160 115 140 115" seconds={2.2} className="text-brand" />
+          <Flow path="M140 108 C158 104 174 104 196 106" seconds={2.2} className="text-brand" />
+          <Flow path="M138 122 C164 126 180 160 178 238" seconds={3.2} r={2} />
+        </g>
       </svg>
       <figcaption className="mt-3 max-w-[22rem] border-t border-border pt-2 text-sm">{caption}</figcaption>
     </figure>
+  );
+}
+
+/** Two dots travelling along `path` forever, half a lap apart, fading in and out at the ends. */
+function Flow({ path, seconds, className, r = 2.4 }: { path: string; seconds: number; className?: string; r?: number }) {
+  return (
+    <g className={className} fill="currentColor">
+      {[0, 0.5].map((offset) => {
+        const begin = `${-offset * seconds}s`; // negative: start part-way through, so there is no wait
+        return (
+          <circle key={offset} r={r} opacity={0}>
+            <animateMotion path={path} dur={`${seconds}s`} begin={begin} repeatCount="indefinite" />
+            <animate
+              attributeName="opacity"
+              values="0;1;1;0"
+              keyTimes="0;0.15;0.85;1"
+              dur={`${seconds}s`}
+              begin={begin}
+              repeatCount="indefinite"
+            />
+          </circle>
+        );
+      })}
+    </g>
   );
 }

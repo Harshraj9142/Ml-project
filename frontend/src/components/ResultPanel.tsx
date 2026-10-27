@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AlertIcon, CheckIcon, Icon } from "@/components/Icons";
 import { KidneyMark } from "@/components/Kidney";
 import { fieldLabel, type Meta, type Prediction } from "@/lib/api";
+import { useCountUp } from "@/lib/motion";
 
 type Props = {
   meta: Meta;
@@ -16,7 +17,15 @@ type Props = {
 export default function ResultPanel({ meta, result, stale, busy, error, children }: Props) {
   return (
     <div className="space-y-5">
-      <section aria-live="polite" aria-busy={busy} className="rounded-md border border-border bg-surface">
+      {/* the top rule turns red or teal with the answer */}
+      <section
+        aria-live="polite"
+        aria-busy={busy}
+        className={`relative overflow-hidden rounded-md border border-t-[3px] border-border bg-surface shadow-sheet transition-colors duration-500 ${
+          result && !error ? (result.positive ? "border-t-risk-high" : "border-t-risk-low") : "border-t-border-strong"
+        }`}
+      >
+        {busy && <Analysing meta={meta} />}
         <h2 className="border-b border-border px-5 py-2.5 font-mono text-xs tracking-[0.14em] text-muted uppercase">
           Interpretation
         </h2>
@@ -65,12 +74,18 @@ function ResultBody({
   const high = result.positive;
   const fieldCount = meta.groups.reduce((n, group) => n + group.fields.length, 0);
   const dim = stale || busy ? "opacity-45" : "";
+  const shown = useCountUp(p, 900); // the percentage counts up while the result prints
   return (
-    <div>
+    // print: the result appears from the top down, like a report coming out of a printer
+    <div className="print">
       <div className={`px-5 pt-6 pb-5 transition-opacity ${dim}`}>
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-          <p className="text-6xl leading-none font-semibold tracking-tight">{formatPercent(p)}</p>
+          <p className="text-6xl leading-none font-semibold tracking-tight">
+            <span aria-hidden>{shown === p ? formatPercent(p) : `${Math.round(shown * 100)}%`}</span>
+            <span className="sr-only">{formatPercent(p)}</span>
+          </p>
           <p
+            style={{ animationDelay: "0.55s" }}
             className={`stamp mt-1 inline-flex items-center gap-1.5 rounded-sm border-2 px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase ring-1 ring-current ring-offset-2 ring-offset-surface ${
               high ? "border-risk-high text-risk-high" : "border-risk-low text-risk-low"
             }`}
@@ -123,7 +138,7 @@ function Meter({ value, high }: { value: number; high: boolean }) {
         className={`relative h-2.5 rounded-full ${high ? "bg-risk-high-track" : "bg-risk-low-track"}`}
       >
         <div
-          className={`h-full rounded-full transition-[width] duration-500 ${high ? "bg-risk-high" : "bg-risk-low"}`}
+          className={`fill-in h-full rounded-full ${high ? "bg-risk-high" : "bg-risk-low"}`}
           style={{ width: `${Math.max(percent, 2)}%` }}
         />
         <div aria-hidden className="absolute -top-1.5 left-1/2 h-5.5 w-0.5 -translate-x-1/2 rounded bg-foreground/70" />
@@ -137,9 +152,38 @@ function Meter({ value, high }: { value: number; high: boolean }) {
   );
 }
 
+/** Shown over the panel while the model runs: a scanner light sweeps and the pipeline steps tick by. */
+function Analysing({ meta }: { meta: Meta }) {
+  const fieldCount = meta.groups.reduce((n, group) => n + group.fields.length, 0);
+  const steps = [
+    `Reading ${fieldCount} values`,
+    "Filling in empty boxes",
+    "Scaling the values",
+    `Running ${meta.model_name}`,
+  ];
+  return (
+    <div role="status" className="absolute inset-0 z-10 flex flex-col justify-center bg-surface/92 px-6 backdrop-blur-[2px]">
+      <div aria-hidden className="scan-line absolute inset-x-0 h-0.5 bg-brand shadow-[0_0_16px_3px_var(--brand)]" />
+      <p className="font-serif text-lg font-semibold">
+        Analysing sample<span className="animate-pulse">...</span>
+      </p>
+      <ol className="mt-3 space-y-1.5 font-mono text-xs text-muted">
+        {steps.map((step, i) => (
+          <li key={step} className="rise flex gap-2" style={{ animationDelay: `${i * 170}ms` }}>
+            <span aria-hidden className="text-brand">
+              ›
+            </span>
+            {step}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 function ModelCard({ meta }: { meta: Meta }) {
   return (
-    <section className="rounded-md border border-border bg-surface">
+    <section className="rounded-md border border-border bg-surface shadow-sheet">
       <h2 className="border-b border-border px-5 py-2.5 font-mono text-xs tracking-[0.14em] text-muted uppercase">
         Model
       </h2>

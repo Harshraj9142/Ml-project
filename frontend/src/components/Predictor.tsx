@@ -6,6 +6,11 @@ import { Icon } from "@/components/Icons";
 import PatientForm from "@/components/PatientForm";
 import ResultPanel from "@/components/ResultPanel";
 import { fetchMeta, predict, toFormValues, type FormValues, type Meta, type Prediction } from "@/lib/api";
+import { pause } from "@/lib/motion";
+
+// The model answers in a few milliseconds; keep the "analysing" animation on screen at least
+// this long so the step is visible during a demo. Set to 0 to show results immediately.
+const ANALYSIS_MS = 800;
 
 /**
  * Loads the form definition from the Python API, then shows the risk checker.
@@ -51,6 +56,7 @@ function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
   const [stale, setStale] = useState(false); // form edited since the last prediction
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadId, setLoadId] = useState(0); // bumped when a sample case or reset fills the form
   const resultRef = useRef<HTMLDivElement>(null);
   // Part 2 has an eGFR box: show where its value sits on the kidney-function stages
   const egfrField = meta.groups.flatMap((group) => group.fields).find((field) => /egfr/i.test(field.key));
@@ -60,17 +66,23 @@ function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
     if (result) setStale(true);
   }
 
+  function load(next: FormValues) {
+    edit(next);
+    setLoadId((n) => n + 1);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError(null);
+    // on phones the result sits below the long form - bring it into view to watch the analysis
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
     try {
-      setResult(await predict(api, values, meta));
+      const [prediction] = await Promise.all([predict(api, values, meta), pause(ANALYSIS_MS)]);
+      setResult(prediction);
       setStale(false);
-      // on phones the result sits below the long form - bring it into view
-      if (window.matchMedia("(max-width: 1023px)").matches) {
-        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "The prediction failed.");
     } finally {
@@ -80,16 +92,19 @@ function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
-      <PatientForm
-        meta={meta}
-        values={values}
-        busy={busy}
-        onChange={(key, value) => edit({ ...values, [key]: value })}
-        onExample={(name) => edit(toFormValues(meta, meta.examples[name]))}
-        onReset={() => edit(toFormValues(meta))}
-        onSubmit={handleSubmit}
-      />
-      <div ref={resultRef} className="scroll-mt-4 lg:sticky lg:top-6">
+      <div className="rise">
+        <PatientForm
+          meta={meta}
+          values={values}
+          busy={busy}
+          loadId={loadId}
+          onChange={(key, value) => edit({ ...values, [key]: value })}
+          onExample={(name) => load(toFormValues(meta, meta.examples[name]))}
+          onReset={() => load(toFormValues(meta))}
+          onSubmit={handleSubmit}
+        />
+      </div>
+      <div ref={resultRef} className="rise scroll-mt-4 lg:sticky lg:top-6" style={{ animationDelay: "120ms" }}>
         <ResultPanel meta={meta} result={result} stale={stale} busy={busy} error={error}>
           {egfrField && <GfrStages value={values[egfrField.key] ?? ""} unit={egfrField.unit} />}
         </ResultPanel>
@@ -129,10 +144,10 @@ function Loading() {
     <div aria-busy="true" aria-label="Loading the form" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
       <div className="space-y-6">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-48 animate-pulse rounded-md border border-border bg-surface" />
+          <div key={i} className="shimmer h-48 rounded-md border border-border bg-surface" />
         ))}
       </div>
-      <div className="h-64 animate-pulse rounded-md border border-border bg-surface" />
+      <div className="shimmer h-64 rounded-md border border-border bg-surface" />
     </div>
   );
 }

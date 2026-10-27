@@ -7,6 +7,7 @@ type Props = {
   meta: Meta;
   values: FormValues;
   busy: boolean;
+  loadId: number; // changes whenever a sample case or reset fills the form -> boxes flash in turn
   onChange: (key: string, value: string) => void;
   onExample: (name: string) => void;
   onReset: () => void;
@@ -19,14 +20,14 @@ const COLUMNS =
   "grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_12rem_6.5rem_3.5rem] lg:grid-cols-[minmax(0,1fr)_14rem_7rem_3.5rem]";
 
 /** The patient form, laid out like a lab report: sample cases, then one section per group of tests. */
-export default function PatientForm({ meta, values, busy, onChange, onExample, onReset, onSubmit }: Props) {
+export default function PatientForm({ meta, values, busy, loadId, onChange, onExample, onReset, onSubmit }: Props) {
   const labFields = meta.groups.flatMap((group) => group.fields).filter((f) => referenceText(f.key));
   const flagged = labFields.filter((f) => flagFor(f.key, values[f.key] ?? "")).length;
 
   return (
     // noValidate: let people type any value (e.g. 1.012) without the browser's step checks
     <form onSubmit={onSubmit} noValidate className="space-y-6">
-      <section className="rounded-md border border-border bg-surface">
+      <section className="rounded-md border border-border bg-surface shadow-sheet">
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-2.5">
           <h2 className="font-mono text-xs tracking-[0.14em] text-muted uppercase">Sample cases</h2>
           <button
@@ -73,7 +74,9 @@ export default function PatientForm({ meta, values, busy, onChange, onExample, o
           letter={String.fromCharCode(65 + i)}
           name={group.name}
           fields={group.fields}
+          firstRow={meta.groups.slice(0, i).reduce((n, g) => n + g.fields.length, 0)}
           values={values}
+          loadId={loadId}
           onChange={onChange}
         />
       ))}
@@ -83,11 +86,11 @@ export default function PatientForm({ meta, values, busy, onChange, onExample, o
           <button
             type="submit"
             disabled={busy}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded bg-accent px-6 py-2.5 font-medium text-on-accent transition-colors hover:bg-accent-hover disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:flex-none"
+            className="group inline-flex flex-1 items-center justify-center gap-2 rounded bg-accent px-6 py-2.5 font-medium text-on-accent transition hover:bg-accent-hover active:scale-[0.97] disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:flex-none"
           >
             {busy && <Icon name="spinner" className="size-4 animate-spin" />}
-            {busy ? "Predicting..." : "Predict"}
-            {!busy && <Icon name="arrow" className="size-4" />}
+            {busy ? "Analysing..." : "Predict"}
+            {!busy && <Icon name="arrow" className="size-4 transition-transform group-hover:translate-x-1" />}
           </button>
           <p className="font-mono text-xs text-muted" aria-live="polite">
             <span className={flagged ? "font-semibold text-risk-high" : ""}>{flagged}</span>
@@ -111,19 +114,23 @@ function Section({
   letter,
   name,
   fields,
+  firstRow,
   values,
+  loadId,
   onChange,
 }: {
   letter: string;
   name: string;
   fields: Field[];
+  firstRow: number; // position of this section's first row in the whole form, for the flash cascade
   values: FormValues;
+  loadId: number;
   onChange: (key: string, value: string) => void;
 }) {
   const labTests = fields.filter((f) => referenceText(f.key));
   const flagged = labTests.filter((f) => flagFor(f.key, values[f.key] ?? "")).length;
   return (
-    <fieldset className="rounded-md border border-border bg-surface">
+    <fieldset className="rounded-md border border-border bg-surface shadow-sheet">
       <legend className="float-left flex w-full items-baseline gap-3 border-b border-border px-5 py-3.5">
         <span className="font-mono text-sm font-semibold text-brand">{letter}</span>
         <span className="font-serif text-xl font-semibold tracking-tight">{name}</span>
@@ -148,8 +155,15 @@ function Section({
           <span className="text-right">{labTests.length ? "Flag" : ""}</span>
         </div>
         <div className="divide-y divide-border">
-          {fields.map((field) => (
-            <Row key={field.key} field={field} value={values[field.key] ?? ""} onChange={onChange} />
+          {fields.map((field, i) => (
+            <Row
+              key={field.key}
+              field={field}
+              value={values[field.key] ?? ""}
+              row={firstRow + i}
+              loadId={loadId}
+              onChange={onChange}
+            />
           ))}
         </div>
       </div>
@@ -160,19 +174,31 @@ function Section({
 function Row({
   field,
   value,
+  row,
+  loadId,
   onChange,
 }: {
   field: Field;
   value: string;
+  row: number;
+  loadId: number;
   onChange: (key: string, value: string) => void;
 }) {
   const id = `field-${field.key}`;
   const reference = referenceText(field.key);
   const flag = flagFor(field.key, value);
   const describedBy = [reference && `${id}-ref`, flag && `${id}-flag`].filter(Boolean).join(" ") || undefined;
+  // after a sample case loads, each box flashes in turn, top to bottom (key={loadId} re-runs it)
+  const flashClass = loadId ? "ink-fill" : "";
+  const flashStyle = loadId ? { animationDelay: `${row * 35}ms` } : undefined;
 
   return (
-    <div className={`grid ${COLUMNS} px-5 py-3 transition-colors ${flag ? "bg-risk-high-soft/60" : ""}`}>
+    // focus-within: a reading-ruler mark on the row being edited
+    <div
+      className={`grid ${COLUMNS} px-5 py-3 transition-colors focus-within:shadow-[inset_3px_0_0_var(--brand)] ${
+        flag ? "bg-risk-high-soft/60" : "hover:bg-surface-muted/50"
+      }`}
+    >
       {field.kind === "choice" ? (
         <span id={`${id}-label`} className="text-sm font-medium">
           {field.label}
@@ -187,10 +213,12 @@ function Row({
         {field.kind === "choice" ? (
           // a two-button switch (radio buttons underneath, for keyboards and screen readers)
           <div
+            key={loadId}
             role="radiogroup"
             aria-labelledby={`${id}-label`}
             aria-describedby={describedBy}
-            className={`grid grid-cols-2 gap-0.5 rounded border bg-surface-muted p-0.5 ${
+            style={flashStyle}
+            className={`grid grid-cols-2 gap-0.5 rounded border bg-surface-muted p-0.5 ${flashClass} ${
               flag ? "border-risk-high/50" : "border-border-strong/70"
             }`}
           >
@@ -214,7 +242,9 @@ function Row({
         ) : (
           // the unit sits inside the box, on the right
           <div
-            className={`flex items-center rounded border bg-surface transition-shadow focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15 ${
+            key={loadId}
+            style={flashStyle}
+            className={`flex items-center rounded border bg-surface transition-shadow focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15 ${flashClass} ${
               flag ? "border-risk-high/50" : "border-border-strong/70"
             }`}
           >
@@ -246,7 +276,8 @@ function Row({
       </span>
 
       <span className="col-start-2 row-start-1 text-right sm:col-start-auto sm:row-start-auto">
-        {flag && <FlagMark id={`${id}-flag`} flag={flag} />}
+        {/* key: a changed flag (e.g. H -> L) pops in again */}
+        {flag && <FlagMark key={flag} id={`${id}-flag`} flag={flag} />}
       </span>
     </div>
   );
@@ -264,7 +295,7 @@ function FlagMark({ id, flag }: { id: string; flag: Exclude<Flag, null> }) {
   return (
     <span
       id={id}
-      className="inline-flex items-center gap-1 rounded-sm bg-risk-high px-1.5 py-0.5 font-mono text-[0.6875rem] font-semibold text-on-risk"
+      className="pop inline-flex items-center gap-1 rounded-sm bg-risk-high px-1.5 py-0.5 font-mono text-[0.6875rem] font-semibold text-on-risk"
     >
       <span aria-hidden className="text-[0.5rem]">
         {mark}

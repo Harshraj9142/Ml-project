@@ -36,13 +36,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${serif.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <div aria-hidden className="backdrop" />
         <header className="border-b border-border-strong bg-surface/85 backdrop-blur">
           <div className="mx-auto flex w-full max-w-6xl flex-wrap items-end justify-between gap-x-8 px-4 pt-4 sm:px-6">
             <Link
               href="/"
-              className="mb-3 flex items-center gap-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+              className="group mb-3 flex items-center gap-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
             >
-              <KidneyMark className="h-9 w-auto text-brand" />
+              <KidneyMark className="h-9 w-auto text-brand transition-transform duration-300 ease-out group-hover:-rotate-12" />
               <span>
                 <span className="block font-serif text-xl leading-none font-semibold tracking-tight">
                   CKD Risk Predictor

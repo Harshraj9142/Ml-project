@@ -21,7 +21,7 @@ export default function GfrStages({ value, unit }: { value: string; unit: string
   const stage = known ? STAGES.find((s) => egfr < s.to) ?? STAGES[STAGES.length - 1] : null;
 
   return (
-    <section className="rounded-md border border-border bg-surface">
+    <section className="rounded-md border border-border bg-surface shadow-sheet">
       <h2 className="border-b border-border px-5 py-2.5 font-mono text-xs tracking-[0.14em] text-muted uppercase">
         Kidney function today
       </h2>

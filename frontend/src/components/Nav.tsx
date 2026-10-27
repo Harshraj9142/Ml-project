@@ -8,7 +8,7 @@ const PAGES = [
   { href: "/future", number: "02", label: "Future risk" },
 ];
 
-/** Tabs along the bottom edge of the header to switch between Part 1 and Part 2. */
+/** Tabs along the bottom edge of the header; the underline slides over when you switch part. */
 export default function Nav() {
   const pathname = usePathname();
   return (
@@ -20,10 +20,8 @@ export default function Nav() {
             key={page.href}
             href={page.href}
             aria-current={active ? "page" : undefined}
-            className={`flex items-baseline gap-2 border-b-2 pt-1 pb-3 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-              active
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted hover:border-border-strong hover:text-foreground"
+            className={`group relative flex items-baseline gap-2 pt-1 pb-3.5 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+              active ? "text-foreground" : "text-muted hover:text-foreground"
             }`}
           >
             <span className="font-mono text-xs text-brand">
@@ -31,6 +29,12 @@ export default function Nav() {
               {page.number}
             </span>
             {page.label}
+            <span
+              aria-hidden
+              className={`absolute inset-x-0 bottom-0 h-0.5 origin-left bg-foreground transition-transform duration-300 ease-out ${
+                active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100 group-hover:bg-border-strong"
+              }`}
+            />
           </Link>
         );
       })}

@@ -7,7 +7,14 @@
  */
 :root {
   --background: #f4f1ea; /* the desk */
-  --grid: rgb(60 50 40 / 0.05); /* faint graph-paper lines on the desk */
+  /* graph paper behind the top of each page: fine lines + kidney-red lines every 5th square */
+  --grid-minor: rgb(60 50 40 / 0.045);
+  --grid-major: rgb(140 47 57 / 0.08);
+  --glow-brand: rgb(140 47 57 / 0.11); /* soft rose light behind the kidney drawing */
+  --glow-warm: rgb(214 168 104 / 0.18); /* warm lamp light, top left */
+  --vignette: rgb(70 45 20 / 0.06); /* left and right page edges slightly darker */
+  /* paper grain: tiny brown specks (SVG noise) */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.22 0 0 0 0 0.14 0 0 0 0.11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --surface: #fffdf8; /* the report sheet */
   --surface-muted: #f1ece2;
   --raised: #fffdf8; /* selected option in the two-button switches */
@@ -36,12 +43,18 @@
   --stage-4: #9f4434;
   --stage-5: #802f22;
   --stage-6: #5e1f16;
+  --sheet-shadow: 0 1px 0 rgb(60 40 20 / 0.04), 0 14px 32px -20px rgb(60 40 20 / 0.3);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #121110;
-    --grid: rgb(236 230 219 / 0.035);
+    --grid-minor: rgb(236 230 219 / 0.03);
+    --grid-major: rgb(227 146 154 / 0.065);
+    --glow-brand: rgb(227 146 154 / 0.09);
+    --glow-warm: rgb(214 168 104 / 0.06);
+    --vignette: rgb(0 0 0 / 0.3);
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.96 0 0 0 0 0.9 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     --surface: #1a1917;
     --surface-muted: #24221f;
     --raised: #3a362f;
@@ -68,6 +81,7 @@
     --stage-4: #c67a6c;
     --stage-5: #dd9384;
     --stage-6: #f2ae9f;
+    --sheet-shadow: 0 1px 0 rgb(0 0 0 / 0.4);
   }
 }
 
@@ -100,19 +114,39 @@
   --color-stage-4: var(--stage-4);
   --color-stage-5: var(--stage-5);
   --color-stage-6: var(--stage-6);
+  --shadow-sheet: var(--sheet-shadow);
   --font-sans: var(--font-plex-sans);
   --font-serif: var(--font-source-serif);
   --font-mono: var(--font-plex-mono);
 }
 
+/* Paper grain over the whole page, with the left and right edges slightly darker, like a
+   sheet under a lamp. Both repeat seamlessly, so full-page screenshots have no seams. */
 body {
   background-color: var(--background);
   background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px;
+    var(--grain),
+    linear-gradient(90deg, var(--vignette), transparent 18%, transparent 82%, var(--vignette));
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Graph paper behind the top of the page (the <div class="backdrop"> in the layout), lit by
+   two soft glows and fading out further down. */
+.backdrop {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 64rem;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(34rem 24rem at 80% 17rem, var(--glow-brand), transparent 70%),
+    radial-gradient(44rem 28rem at 8% -2rem, var(--glow-warm), transparent 70%),
+    linear-gradient(var(--grid-major) 1px, transparent 1px) 50% 0 / 60px 60px,
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px) 50% 0 / 60px 60px,
+    linear-gradient(var(--grid-minor) 1px, transparent 1px) 50% 0 / 12px 12px,
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px) 50% 0 / 12px 12px;
+  mask-image: linear-gradient(to bottom, black 30%, transparent 95%);
 }
 
 /* Number boxes without the browser's up/down arrows (the keyboard arrows still work). */
@@ -123,6 +157,106 @@ input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/*
+ * Motion. Everything below switches off for people who ask their operating system
+ * for reduced motion (see the end of the file).
+ */
+
+/* Page content rises into place on load; style="animation-delay" staggers it. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Loading a sample case: each box flashes as its value is written in, top to bottom. */
+@keyframes ink-fill {
+  from {
+    background-color: var(--brand-soft);
+    border-color: var(--brand);
+  }
+}
+.ink-fill {
+  animation: ink-fill 0.9s ease-out;
+}
+
+/* A new H / L / ABN flag pops in. */
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.pop {
+  animation: pop 0.35s ease-out both;
+}
+
+/* While predicting, a scanner light sweeps the Interpretation panel. */
+@keyframes scan {
+  from {
+    top: 0%;
+  }
+  to {
+    top: 100%;
+  }
+}
+.scan-line {
+  animation: scan 0.9s ease-in-out infinite alternate;
+}
+
+/* The result prints out from the top, then the stamp lands. */
+@keyframes print {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.print {
+  animation: print 0.6s cubic-bezier(0.3, 0.6, 0.3, 1) both;
+}
+
+/* The score bar fills from zero up to its value. */
+@keyframes fill-in {
+  from {
+    width: 0;
+  }
+}
+.fill-in {
+  animation: fill-in 1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.25s both;
+}
+
+/* Blank sheets while the form loads: a soft light passes over them. */
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+.shimmer {
+  background-image: linear-gradient(100deg, transparent 30%, var(--surface-muted) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
 }
 
 /* The verdict lands like a rubber stamp on the report. */
@@ -166,10 +300,31 @@ input[type="number"]::-webkit-outer-spin-button {
   animation-delay: 1s;
 }
 
+/* Blood and urine start to flow once the drawing has finished. */
+@keyframes appear {
+  to {
+    opacity: 1;
+  }
+}
+.flow {
+  opacity: 0;
+  animation: appear 0.6s ease-out 2.6s forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .stamp,
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
   .draw-in path {
-    animation: none;
     stroke-dashoffset: 0;
+  }
+  .flow,
+  .scan-line {
+    display: none;
   }
 }
