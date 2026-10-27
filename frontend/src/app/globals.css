@@ -1,41 +1,73 @@
 @import "tailwindcss";
 
-/* Colour tokens: light by default, dark when the operating system asks for it. */
+/*
+ * Theme: a clinical lab report. Warm paper, black ink, a kidney-red brand mark,
+ * and red flags for results outside the reference range. Dark mode is "the same
+ * report on a lightbox": its own steps, not an automatic inversion.
+ */
 :root {
-  --background: #f5f6f8;
-  --surface: #ffffff;
-  --surface-muted: #f0f2f5;
-  --raised: #ffffff; /* selected option in the two-button switches */
-  --border: #dfe3e8;
-  --foreground: #161a20;
-  --muted: #5b6472;
-  --accent: #2554c7;
-  --accent-hover: #1d46ab;
-  --on-accent: #ffffff;
+  --background: #f4f1ea; /* the desk */
+  --grid: rgb(60 50 40 / 0.05); /* faint graph-paper lines on the desk */
+  --surface: #fffdf8; /* the report sheet */
+  --surface-muted: #f1ece2;
+  --raised: #fffdf8; /* selected option in the two-button switches */
+  --border: #e3dccf;
+  --border-strong: #cbbfab;
+  --foreground: #1d1b17; /* ink */
+  --muted: #6c6457;
+  --accent: #233142; /* blue-black ink: buttons, focus rings */
+  --accent-hover: #111c28;
+  --accent-soft: #ebe6dc;
+  --on-accent: #fffdf8;
+  --brand: #8c2f39; /* kidney red: logo, section letters */
+  --brand-soft: #f4e4e2;
+  /* risk colours: always shown with an icon and a text label, never colour alone */
   --risk-high: #b42318;
-  --risk-high-soft: #fdecea;
-  --risk-low: #18794a;
-  --risk-low-soft: #e6f4ec;
-  --track: #e4e7ec;
+  --risk-high-soft: #fbe8e4;
+  --risk-high-track: #f0c3bb; /* empty part of the score bar - lighter step of the same red */
+  --risk-low: #0a7488;
+  --risk-low-soft: #e1f0f2;
+  --risk-low-track: #b3dbe1;
+  --on-risk: #ffffff;
+  /* KDIGO kidney-function stages G1 -> G5: one hue, light -> dark (checked as an ordinal ramp) */
+  --stage-1: #d99a8c;
+  --stage-2: #ca7a6a;
+  --stage-3: #b85d4c;
+  --stage-4: #9f4434;
+  --stage-5: #802f22;
+  --stage-6: #5e1f16;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0e1116;
-    --surface: #161a21;
-    --surface-muted: #1e232c;
-    --raised: #39414f;
-    --border: #2b313c;
-    --foreground: #e8ebf0;
-    --muted: #9ba4b3;
-    --accent: #7c9dff;
-    --accent-hover: #95b0ff;
-    --on-accent: #0b1020;
-    --risk-high: #ff8f80;
-    --risk-high-soft: #3b1e1c;
-    --risk-low: #62d39b;
-    --risk-low-soft: #15301f;
-    --track: #282e38;
+    --background: #121110;
+    --grid: rgb(236 230 219 / 0.035);
+    --surface: #1a1917;
+    --surface-muted: #24221f;
+    --raised: #3a362f;
+    --border: #302d29;
+    --border-strong: #48433c;
+    --foreground: #ece6db;
+    --muted: #a39b8d;
+    --accent: #ece6db;
+    --accent-hover: #ffffff;
+    --accent-soft: #2a2723;
+    --on-accent: #151412;
+    --brand: #e3929a;
+    --brand-soft: #3a2226;
+    --risk-high: #ff8a7a;
+    --risk-high-soft: #33191a;
+    --risk-high-track: #5e2a26;
+    --risk-low: #4cc3cf;
+    --risk-low-soft: #12292c;
+    --risk-low-track: #1b4a50;
+    --on-risk: #121110;
+    --stage-1: #74403a;
+    --stage-2: #91514a;
+    --stage-3: #ac6458;
+    --stage-4: #c67a6c;
+    --stage-5: #dd9384;
+    --stage-6: #f2ae9f;
   }
 }
 
@@ -46,22 +78,98 @@
   --color-surface-muted: var(--surface-muted);
   --color-raised: var(--raised);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
   --color-risk-high: var(--risk-high);
   --color-risk-high-soft: var(--risk-high-soft);
+  --color-risk-high-track: var(--risk-high-track);
   --color-risk-low: var(--risk-low);
   --color-risk-low-soft: var(--risk-low-soft);
-  --color-track: var(--track);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-risk-low-track: var(--risk-low-track);
+  --color-on-risk: var(--on-risk);
+  --color-stage-1: var(--stage-1);
+  --color-stage-2: var(--stage-2);
+  --color-stage-3: var(--stage-3);
+  --color-stage-4: var(--stage-4);
+  --color-stage-5: var(--stage-5);
+  --color-stage-6: var(--stage-6);
+  --font-sans: var(--font-plex-sans);
+  --font-serif: var(--font-source-serif);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Number boxes without the browser's up/down arrows (the keyboard arrows still work). */
+input[type="number"] {
+  appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* The verdict lands like a rubber stamp on the report. */
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.8) rotate(-12deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(-2deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-3deg);
+  }
+}
+.stamp {
+  transform: rotate(-3deg);
+  animation: stamp 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+/* Line drawings draw themselves in (paths use pathLength="1"). */
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-in path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1.8s ease-out forwards;
+}
+.draw-in path:nth-child(2) {
+  animation-delay: 0.35s;
+}
+.draw-in path:nth-child(3) {
+  animation-delay: 0.7s;
+}
+.draw-in path:nth-child(n + 4) {
+  animation-delay: 1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp,
+  .draw-in path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
 }

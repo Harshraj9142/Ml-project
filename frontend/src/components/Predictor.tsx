@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import GfrStages from "@/components/GfrStages";
+import { Icon } from "@/components/Icons";
 import PatientForm from "@/components/PatientForm";
 import ResultPanel from "@/components/ResultPanel";
 import { fetchMeta, predict, toFormValues, type FormValues, type Meta, type Prediction } from "@/lib/api";
@@ -50,6 +52,8 @@ function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  // Part 2 has an eGFR box: show where its value sits on the kidney-function stages
+  const egfrField = meta.groups.flatMap((group) => group.fields).find((field) => /egfr/i.test(field.key));
 
   function edit(next: FormValues) {
     setValues(next);
@@ -75,17 +79,20 @@ function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
       <PatientForm
         meta={meta}
         values={values}
         busy={busy}
         onChange={(key, value) => edit({ ...values, [key]: value })}
         onExample={(name) => edit(toFormValues(meta, meta.examples[name]))}
+        onReset={() => edit(toFormValues(meta))}
         onSubmit={handleSubmit}
       />
       <div ref={resultRef} className="scroll-mt-4 lg:sticky lg:top-6">
-        <ResultPanel meta={meta} result={result} stale={stale} busy={busy} error={error} />
+        <ResultPanel meta={meta} result={result} stale={stale} busy={busy} error={error}>
+          {egfrField && <GfrStages value={values[egfrField.key] ?? ""} unit={egfrField.unit} />}
+        </ResultPanel>
       </div>
     </div>
   );
@@ -93,8 +100,11 @@ function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
 
 function ApiUnavailable({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div role="alert" className="max-w-2xl rounded-xl border border-border bg-surface p-6">
-      <h2 className="font-semibold">Can&apos;t reach the prediction API</h2>
+    <div role="alert" className="max-w-2xl rounded-md border border-border bg-surface p-6">
+      <h2 className="flex items-center gap-2 font-semibold">
+        <Icon name="warning" className="size-5 text-risk-high" />
+        Can&apos;t reach the prediction API
+      </h2>
       <p className="mt-1 text-sm text-muted">{message}</p>
       <p className="mt-3 text-sm text-muted">
         The models run in Python. Open a second terminal in the project folder and start the API
@@ -106,7 +116,7 @@ function ApiUnavailable({ message, onRetry }: { message: string; onRetry: () => 
       <button
         type="button"
         onClick={onRetry}
-        className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="mt-4 rounded bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         Try again
       </button>
@@ -116,13 +126,13 @@ function ApiUnavailable({ message, onRetry }: { message: string; onRetry: () => 
 
 function Loading() {
   return (
-    <div aria-busy="true" aria-label="Loading the form" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div aria-busy="true" aria-label="Loading the form" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
       <div className="space-y-6">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-48 animate-pulse rounded-xl border border-border bg-surface" />
+          <div key={i} className="h-48 animate-pulse rounded-md border border-border bg-surface" />
         ))}
       </div>
-      <div className="h-64 animate-pulse rounded-xl border border-border bg-surface" />
+      <div className="h-64 animate-pulse rounded-md border border-border bg-surface" />
     </div>
   );
 }

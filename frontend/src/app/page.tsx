@@ -1,20 +1,24 @@
+import PageIntro from "@/components/PageIntro";
 import Predictor from "@/components/Predictor";
 
 /** Part 1 - does the patient have CKD now? */
 export default function Home() {
   return (
     <>
-      <header className="mb-8">
-        <p className="text-sm font-medium text-accent">Part 1 · Diagnosis</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
-          CKD Risk Predictor
-        </h1>
-        <p className="mt-3 max-w-2xl text-muted">
-          Enter a patient&apos;s routine blood and urine test results. A machine-learning model
-          trained on 400 patients estimates the probability that the patient has chronic kidney
-          disease now.
-        </p>
-      </header>
+      <PageIntro
+        eyebrow="Part 01 — Diagnosis"
+        title="Does this patient have chronic kidney disease?"
+        facts={[
+          { value: "400", label: "patients" },
+          { value: "24", label: "routine tests" },
+          { value: "6", label: "algorithms" },
+        ]}
+        figure="Fig. 1 — The kidney. Each one holds about a million tiny filters, called nephrons."
+      >
+        Enter a patient&apos;s routine blood and urine test results. A machine-learning model
+        trained on 400 patients estimates the probability that the patient has chronic kidney
+        disease now.
+      </PageIntro>
       <Predictor api="/api" />
     </>
   );
