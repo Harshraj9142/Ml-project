@@ -70,7 +70,7 @@ def get_models():
         "PLA (Perceptron)": (
             Perceptron(random_state=RANDOM_STATE), True,
             {"model__eta0": [0.1, 1.0], "model__penalty": [None, "l2"]}),
-        "SLP (our own code)": (
+        "SLP": (
             SingleLayerPerceptron(random_state=RANDOM_STATE), True,
             {"model__epochs": [10, 50, 100]}),
         "Linear Regression": (

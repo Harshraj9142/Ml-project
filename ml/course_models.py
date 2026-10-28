@@ -123,7 +123,7 @@ def main():
     print(show.to_string())
 
     # facts worth quoting in the viva
-    slp = fitted["SLP (our own code)"].named_steps["model"]
+    slp = fitted["SLP"].named_steps["model"]
     print(f"\nSLP on the {n_train} training patients: mistakes per epoch {slp.errors_} "
           f"-> {'converged to 0 errors: the data is linearly separable, like the AND gate'
                 if slp.errors_[-1] == 0 else 'did not reach 0 errors (not linearly separable)'}.")

@@ -20,7 +20,7 @@ export type Candidate = {
 /** Part 1, best first. */
 export const CANDIDATES: Candidate[] = [
   { name: "Logistic Regression", avgWrong: 2.95, fewest: 1, most: 6, wins: 11, examWrong: 1, givesPercent: true, verdict: "Chosen" },
-  { name: "SLP (our own code)", avgWrong: 3.75, fewest: 1, most: 7, wins: 5.5, examWrong: 3, givesPercent: false, verdict: "Runner-up" },
+  { name: "SLP", avgWrong: 3.75, fewest: 1, most: 7, wins: 5.5, examWrong: 3, givesPercent: false, verdict: "Runner-up" },
   { name: "PLA (Perceptron)", avgWrong: 4.25, fewest: 1, most: 10, wins: 3.5, examWrong: 0, givesPercent: false, verdict: "Yes / no only" },
   { name: "Linear Regression", avgWrong: 11.15, fewest: 8, most: 17, wins: 0, examWrong: 5, givesPercent: false, verdict: "Wrong tool" },
   { name: "Naive Bayes", avgWrong: 12, fewest: 12, most: 12, wins: 0, examWrong: 2, givesPercent: true, verdict: "More mistakes" },

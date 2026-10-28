@@ -186,7 +186,7 @@ Course classifiers - 5-fold CV repeated 20 times on the 320 training patients
 | Algorithm | Gives a %? | CV accuracy | CV recall | CV wrong (of 320) | Ranked 1st (of 20) | Test: missed CKD | Test: false alarms |
 |---|---|---|---|---|---|---|---|
 | **Logistic Regression** | yes | 0.991 ± 0.015 | 0.992 | 3.0 | 11 | 1 | 0 |
-| SLP (our own code) | no | 0.988 ± 0.015 | 0.986 | 3.8 | 5.5 | 2 | 1 |
+| SLP | no | 0.988 ± 0.015 | 0.986 | 3.8 | 5.5 | 2 | 1 |
 | PLA (Perceptron) | no | 0.987 ± 0.017 | 0.984 | 4.2 | 3.5 | 0 | 0 |
 | Linear Regression | no | 0.965 ± 0.022 | 0.946 | 11.2 | 0 | 5 | 0 |
 | Naive Bayes | yes | 0.962 ± 0.019 | 0.940 | 12.0 | 0 | 2 | 0 |
@@ -247,7 +247,7 @@ app's **Part 2 · Future risk** page.
 | Linear Regression | 0.838 | 0.136 | 0.592 | 0.891 |
 | Naive Bayes | 0.828 | 0.682 | 0.324 | 0.798 |
 | KNN | 0.775 | 0.089 | 0.229 | 0.869 |
-| SLP (our own code) | 0.756 | 0.298 | 0.268 | 0.833 |
+| SLP | 0.756 | 0.298 | 0.268 | 0.833 |
 | PLA (Perceptron) | 0.720 | 0.269 | 0.243 | 0.847 |
 | Always "no CKD" (baseline) | 0.500 | 0.000 | 0.000 | 0.885 |
 

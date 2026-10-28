@@ -229,7 +229,7 @@ def main():
           .round(3).to_string(index=False))
 
     # the perceptron can't separate these patients with a straight line (unlike Part 1)
-    slp = make_pipeline(get_models()["SLP (our own code)"][0], True).fit(X_train, y_train)
+    slp = make_pipeline(get_models()["SLP"][0], True).fit(X_train, y_train)
     errs = slp.named_steps["model"].errors_
     print(f"\nSLP mistakes in its last 5 of {len(errs)} epochs: {errs[-5:]} -> "
           + ("reached 0: linearly separable" if errs[-1] == 0

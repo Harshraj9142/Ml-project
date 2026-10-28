@@ -152,7 +152,7 @@ export default function Method() {
           </article>
           <div className="grid gap-4 md:grid-cols-2">
             <Rejected
-              name="SLP (our own code)"
+              name="SLP"
               verdict="Runner-up"
               does="Our own perceptron from the AND-gate lab: the same weighted sum, but with a step instead of the S-curve, so the answer is only yes or no."
               evidence="3.75 wrong on average · won 5.5 of 20 · no %"
