@@ -123,11 +123,11 @@ def main():
           .head(8).round(2).to_string())
 
     # 5. One patient, step by step ---------------------------------------------------
-    record = EXAMPLES["CKD-looking"]
+    record = EXAMPLES["advanced CKD"]
     x = prep.transform(clean_frame(pd.DataFrame([record])))[0]  # same filling + scaling
     parts = pd.Series(model.w * x, index=[FEATURE_INFO[c][0] for c in FEATURES])
     z = parts.sum() + model.b
-    print("\nThe 'CKD-looking' example patient:")
+    print("\nThe 'advanced CKD' example patient:")
     print("  biggest parts of the score (weight x scaled value):")
     for name, value in parts.reindex(parts.abs().sort_values(ascending=False).index).head(5).items():
         print(f"    {name:24s} {value:+6.2f}")

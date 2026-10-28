@@ -17,18 +17,28 @@ from prepare import ROOT, clean_frame
 
 DEFAULT_MODEL_PATH = ROOT / "models" / "ckd_model.joblib"
 
-# Two example patients for demos (this script's demo and the Next.js UI's example buttons).
-_HEALTHY_LIKE = {"age": 40, "bp": 70, "sg": 1.025, "al": 0, "su": 0, "rbc": "normal",
-                 "pc": "normal", "pcc": "notpresent", "ba": "notpresent", "bgr": 100,
-                 "bu": 30, "sc": 0.9, "sod": 142, "pot": 4.4, "hemo": 15.5, "pcv": 46,
-                 "wc": 7000, "rc": 5.2, "htn": "no", "dm": "no", "cad": "no",
-                 "appet": "good", "pe": "no", "ane": "no"}
+# Four example patients for demos (this script's demo and the Next.js UI's example buttons),
+# mildest first - the page shows them in this order, with a 1-4 level mark. With the saved
+# model they score about 0%, 33%, 83% and 100%.
+_HEALTHY = {"age": 40, "bp": 70, "sg": 1.025, "al": 0, "su": 0, "rbc": "normal",
+            "pc": "normal", "pcc": "notpresent", "ba": "notpresent", "bgr": 100,
+            "bu": 30, "sc": 0.9, "sod": 142, "pot": 4.4, "hemo": 15.5, "pcv": 46,
+            "wc": 7000, "rc": 5.2, "htn": "no", "dm": "no", "cad": "no",
+            "appet": "good", "pe": "no", "ane": "no"}
 EXAMPLES = {
-    "healthy-looking": _HEALTHY_LIKE,
-    "CKD-looking": {**_HEALTHY_LIKE, "age": 62, "bp": 90, "sg": 1.010, "al": 3, "su": 1,
-                    "pc": "abnormal", "bu": 80, "sc": 4.5, "sod": 131, "hemo": 9.8, "pcv": 30,
-                    "rc": 3.6, "htn": "yes", "dm": "yes", "appet": "poor", "pe": "yes",
-                    "ane": "yes"},
+    "healthy": _HEALTHY,
+    # high blood sugar, raised white cells, borderline hemoglobin - but normal kidney tests.
+    # (No diabetes or hypertension here: in this dataset none of the 150 healthy patients
+    # has either, so the model reads them as strong signs of CKD.)
+    "unwell, kidneys normal": {**_HEALTHY, "age": 60, "bp": 85, "sg": 1.020, "bgr": 160, "bu": 38,
+                               "sc": 1.0, "hemo": 13.5, "pcv": 41, "wc": 10500, "rc": 4.7},
+    "early (mild) CKD": {**_HEALTHY, "age": 58, "bp": 80, "sg": 1.020, "al": 1, "bgr": 120,
+                         "bu": 45, "sc": 1.4, "sod": 138, "pot": 4.6, "hemo": 13.0, "pcv": 40,
+                         "wc": 8200, "rc": 4.6},
+    "advanced CKD": {**_HEALTHY, "age": 62, "bp": 90, "sg": 1.010, "al": 3, "su": 1,
+                     "pc": "abnormal", "bu": 80, "sc": 4.5, "sod": 131, "hemo": 9.8, "pcv": 30,
+                     "rc": 3.6, "htn": "yes", "dm": "yes", "appet": "poor", "pe": "yes",
+                     "ane": "yes"},
 }
 
 
@@ -57,4 +67,4 @@ if __name__ == "__main__":
     print("Model:", bundle["model_name"])
     for name, rec in EXAMPLES.items():
         r = predict_patient(rec, bundle)
-        print(f"{name:16s} -> {r['prediction']:8s} (P(CKD) = {r['probability_ckd']:.2f})")
+        print(f"{name:24s} -> {r['prediction']:8s} (P(CKD) = {r['probability_ckd']:.2f})")

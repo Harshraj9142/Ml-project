@@ -251,9 +251,9 @@ export default function Method() {
           </ol>
 
           <div>
-            <h3 className="font-serif text-lg font-semibold">Worked example: the two sample cases</h3>
+            <h3 className="font-serif text-lg font-semibold">Worked example: the mildest and the most severe case</h3>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted">
-              The saved model working through Case 01 and Case 02 from the Part 1 page. Each part is
+              The saved model working through Case 01 and Case 04 from the Part 1 page. Each part is
               a test&apos;s weight × its value (after filling in and scaling). The website rounds
               the answers to &lt;1% and &gt;99%.
             </p>

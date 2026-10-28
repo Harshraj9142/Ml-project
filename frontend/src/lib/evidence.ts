@@ -57,13 +57,14 @@ export const FUTURE = {
 };
 
 /**
- * The two sample cases from Part 1, worked through by the saved model: each test's part of
+ * The mildest and the most severe sample case from Part 1 (Case 01 and Case 04), worked
+ * through by the saved model: each test's part of
  * the score is its weight x its (filled-in, scaled) value. The three biggest parts are listed;
  * the other 21 tests are added up together.
  */
 export const WORKED = [
   {
-    name: "Case 01 · Healthy-looking",
+    name: "Case 01 · Healthy",
     parts: [
       { test: "Urine specific gravity", value: "1.025", part: -3.9 },
       { test: "Hemoglobin", value: "15.5 g/dL", part: -2.95 },
@@ -76,7 +77,7 @@ export const WORKED = [
     positive: false,
   },
   {
-    name: "Case 02 · CKD-looking",
+    name: "Case 04 · Advanced CKD",
     parts: [
       { test: "Urine specific gravity", value: "1.010", part: 4.13 },
       { test: "Albumin in urine", value: "3 of 5", part: 3.63 },

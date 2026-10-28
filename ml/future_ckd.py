@@ -129,7 +129,8 @@ def make_pipeline(estimator, scale: bool) -> Pipeline:
 
 def web_form(X_train: pd.DataFrame, y_train: pd.Series) -> dict:
     """What the web app's Part 2 page needs: the form fields (starting at the typical
-    values of patients who stayed free of CKD), the yes/no words, and two example patients."""
+    values of patients who stayed free of CKD), the yes/no words, and four example patients
+    from low to very high risk."""
     choices = {c: CHOICE_WORDS.get(c, ["no", "yes"])
                for c in X_train.columns if set(X_train[c].dropna().unique()) <= {0, 1}}
 
@@ -157,9 +158,28 @@ def web_form(X_train: pd.DataFrame, y_train: pd.Series) -> dict:
             fields.append(field)
         groups.append({"name": name, "fields": fields})
     assert sorted(c for cols in FUTURE_FORM_GROUPS.values() for c in cols) == sorted(X_train.columns)
-    return {"choices": choices, "groups": groups,
-            "examples": {"typical patient who stayed CKD-free": stayed,
-                         "typical patient who developed CKD": developed}}
+
+    # Demo buttons, lowest risk first (the page shows them in this order, with a 1-4 level
+    # mark). "high risk" is the typical patient who developed CKD; the others are made-up
+    # patients, checked against the model: risk scores about 2%, 41%, 83% and 98%.
+    no_history = {c: "no" for c in choices if c != "Gender"}
+    examples = {
+        "low risk": {**stayed, **no_history, "Gender": "female", "AgeBaseline": 38.0,
+                     "BMIBaseline": 24.0, "CholesterolBaseline": 4.6, "TriglyceridesBaseline": 1.0,
+                     "HgbA1C": 5.3, "CreatnineBaseline": 58.0, "eGFRBaseline": 110.0,
+                     "sBPBaseline": 116.0, "dBPBaseline": 74.0},
+        "moderate risk": {**developed, "Gender": "male", "AgeBaseline": 60.0, "HistoryObesity": "no",
+                          "ACEIARB": "no", "HgbA1C": 7.2, "CreatnineBaseline": 78.0,
+                          "eGFRBaseline": 87.0, "sBPBaseline": 138.0, "dBPBaseline": 78.0,
+                          "BMIBaseline": 29.5, "CholesterolBaseline": 4.7, "TriglyceridesBaseline": 1.5},
+        "high risk": developed,
+        "very high risk": {**developed, "AgeBaseline": 70.0, "HistoryCHD": "yes",
+                           "HistoryVascular": "yes", "HgbA1C": 8.5, "CreatnineBaseline": 95.0,
+                           "eGFRBaseline": 66.0, "sBPBaseline": 158.0, "dBPBaseline": 72.0,
+                           "BMIBaseline": 32.0, "CholesterolBaseline": 4.2,
+                           "TriglyceridesBaseline": 2.0},
+    }
+    return {"choices": choices, "groups": groups, "examples": examples}
 
 
 def main():

@@ -106,7 +106,18 @@ Then open http://localhost:3000. The tabs at the top switch between the three pa
   how it works (with a worked example), and the full flow from raw data to the answer on screen.
   Its numbers and charts are copies of `reports/`; re-copy them if you change and re-run the scripts.
 
-Both prediction pages have example-patient buttons for demos. Restart terminal 1 after re-training a model.
+Both prediction pages have four example-patient buttons for demos, mildest first (each fills the
+whole form; then press Predict):
+
+| Case | Part 1 (model says) | Part 2 (risk score) |
+|---|---|---|
+| 01 | Healthy (<1%) | Low risk (2%) |
+| 02 | Unwell, kidneys normal (33%) | Moderate risk (41%) |
+| 03 | Early (mild) CKD (83%) | High risk (83%) |
+| 04 | Advanced CKD (>99%) | Very high risk (98%) |
+
+They are defined in `ml/predict.py` (Part 1) and `ml/future_ckd.py` (Part 2, saved inside the
+model file, so re-run that script after changing them). Restart terminal 1 after re-training a model.
 
 If `npm install` fails with `EACCES ... _cacache`, your npm cache has files owned by root
 (an old npm bug). Fix it once with `sudo chown -R $(id -u):$(id -g) ~/.npm`, then retry.
@@ -268,6 +279,9 @@ precision 0.450 (11 false alarms), accuracy 0.869.
   a general rule.
 - Healthy patients have far fewer missing values than CKD patients, so missingness itself
   leaks some signal.
+- None of the 150 healthy patients has diabetes, hypertension, anemia or poor appetite, so the
+  model treats each of these as a strong sign of CKD: a diabetic patient with normal kidney
+  tests is still flagged (about 98%). A real hospital would need healthy diabetics in the data.
 - Part 2 has only 56 CKD events (11 in the test set), so its test scores can move a lot
   with one or two patients; the 10x repeated CV numbers are the more reliable ones.
 - Not a medical device; for learning only.

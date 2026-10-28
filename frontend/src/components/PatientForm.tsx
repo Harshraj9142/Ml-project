@@ -41,20 +41,19 @@ export default function PatientForm({ meta, values, busy, loadId, onChange, onEx
             Reset form
           </button>
         </div>
-        <div className="grid divide-y divide-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-          {Object.keys(meta.examples).map((name, i) => (
+        {/* the API lists the cases mildest first (ml/predict.py, ml/future_ckd.py); the hairlines
+            between them are the border colour showing through the 1px gaps */}
+        <div className="grid gap-px overflow-hidden rounded-b-md bg-border sm:grid-cols-2">
+          {Object.keys(meta.examples).map((name, i, names) => (
             <button
               key={name}
               type="button"
               onClick={() => onExample(name)}
-              className="group flex items-center gap-4 px-5 py-4 text-left transition-colors first:rounded-bl-md last:rounded-br-md hover:bg-surface-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+              className="group flex items-center gap-4 bg-surface px-5 py-4 text-left transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent sm:last:odd:col-span-2"
             >
               <span className="font-mono text-xs text-muted">Case {String(i + 1).padStart(2, "0")}</span>
               <span className="flex-1 text-sm font-medium">{name.charAt(0).toUpperCase() + name.slice(1)}</span>
-              <span
-                aria-hidden
-                className={`size-2 shrink-0 rounded-full ${looksHealthy(name) ? "bg-risk-low" : "bg-risk-high"}`}
-              />
+              <Level value={i + 1} of={names.length} />
               <Icon
                 name="arrow"
                 className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
@@ -107,9 +106,19 @@ export default function PatientForm({ meta, values, busy, loadId, onChange, onEx
   );
 }
 
-/** The example names come from the API, e.g. "healthy-looking" or "typical patient who stayed CKD-free". */
-function looksHealthy(name: string): boolean {
-  return /healthy|free/i.test(name);
+/** How far along a sample case is, from mildest to most severe: rising bars, like a signal meter. */
+function Level({ value, of }: { value: number; of: number }) {
+  return (
+    <span aria-hidden className="flex h-3.5 shrink-0 items-end gap-0.5">
+      {Array.from({ length: of }, (_, i) => (
+        <span
+          key={i}
+          className={`w-1 rounded-[1px] ${i < value ? "bg-brand" : "bg-border-strong"}`}
+          style={{ height: `${((i + 1) / of) * 100}%` }}
+        />
+      ))}
+    </span>
+  );
 }
 
 function Section({
