@@ -19,6 +19,7 @@ Ml Lab Project/
 │   ├── prepare.py             data loading + cleaning (shared by training and the apps)
 │   ├── custom_models.py       SLP written from scratch (PLA rule) + linear regression as a yes/no classifier
 │   ├── train.py               Part 1: EDA -> model comparison -> tuning -> evaluation -> save
+│   ├── logistic_regression.py the final model's algorithm written from scratch, checked against scikit-learn
 │   ├── robustness.py          repeats the model comparison 20x - is the winner just lucky?
 │   ├── course_models.py       confusion matrix for every algorithm + k-means / DBSCAN clustering
 │   ├── future_ckd.py          Part 2: predict who will DEVELOP CKD (UAE hospital data)
@@ -37,7 +38,8 @@ Ml Lab Project/
 │   ├── ckd_model.joblib         Part 1, from train.py
 │   └── future_ckd_model.joblib  Part 2, from future_ckd.py
 └── reports/                   created by the ml/ scripts
-    ├── figures/01..14_*.png   charts for your report / slides (15..17 = web app screenshots)
+    ├── figures/01..14_*.png   charts for your report / slides (15..17 = web app screenshots,
+    │                          18 = logistic regression from scratch)
     ├── model_comparison.csv
     ├── robustness_check.csv
     ├── course_models.csv
@@ -67,6 +69,8 @@ python ml/course_models.py
 python ml/future_ckd.py
 # 6. try the saved model from the terminal
 python ml/predict.py
+# 7. logistic regression written from scratch - same answers as the saved model (~1 s)
+python ml/logistic_regression.py
 ```
 
 Train and run the app in the same environment: a model saved with one
@@ -110,7 +114,7 @@ The older Streamlit version still works on its own: `streamlit run streamlit_app
 |---|---|
 | PLA | scikit-learn `Perceptron`, compared in `train.py` |
 | SLP (AND-gate / attendance labs) | our own perceptron in `custom_models.py`, compared in `train.py` |
-| Logistic regression | compared in `train.py` - **the final model** |
+| Logistic regression | compared in `train.py` - **the final model**; written from scratch in `logistic_regression.py` |
 | Linear regression | compared in `train.py`, forced to yes/no (CKD if output >= 0.5) |
 | KNN | compared in `train.py` |
 | Naive Bayes | Gaussian Naive Bayes, compared in `train.py` |
