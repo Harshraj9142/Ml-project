@@ -39,6 +39,8 @@ export function KidneyFigure({ caption }: { caption: string }) {
         viewBox="-62 6 352 244"
         role="img"
         aria-label="Line drawing of a kidney, with its cortex, renal artery and vein, and ureter labelled"
+        // where the background pulse starts (HeroGrid): the middle of the kidney, as a fraction of the drawing
+        data-pulse-origin="0.45 0.47"
         className={`w-full max-w-[22rem] ${settled ? "" : "draw-in"}`}
         fill="none"
         stroke="currentColor"

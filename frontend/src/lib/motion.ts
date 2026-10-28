@@ -12,7 +12,8 @@ export function useCountUp(target: number, duration = 900): number {
     const start = performance.now();
     let frame = 0;
     const tick = (now: number) => {
-      const t = ms === 0 ? 1 : Math.min(1, (now - start) / ms);
+      // (clamped at 0: a frame's timestamp can be a moment earlier than `start`)
+      const t = ms === 0 ? 1 : Math.min(1, Math.max(0, (now - start) / ms));
       setValue(target * (1 - (1 - t) ** 3));
       if (t < 1) frame = requestAnimationFrame(tick);
     };

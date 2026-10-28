@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
+import HeroGrid from "@/components/HeroGrid";
 import { KidneyMark } from "@/components/Kidney";
 import Nav from "@/components/Nav";
 import "./globals.css";
@@ -36,8 +37,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${serif.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <div aria-hidden className="backdrop" />
-        <header className="border-b border-border-strong bg-surface/85 backdrop-blur">
+        <div aria-hidden className="backdrop">
+          <HeroGrid />
+        </div>
+        {/* named, so the header stays put while the page slides when you switch part */}
+        <header className="border-b border-border-strong bg-surface/85 backdrop-blur" style={{ viewTransitionName: "site-header" }}>
           <div className="mx-auto flex w-full max-w-6xl flex-wrap items-end justify-between gap-x-8 px-4 pt-4 sm:px-6">
             <Link
               href="/"

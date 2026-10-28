@@ -1,10 +1,11 @@
 import PageIntro from "@/components/PageIntro";
+import PageTransition from "@/components/PageTransition";
 import Predictor from "@/components/Predictor";
 
 /** Part 1 - does the patient have CKD now? */
 export default function Home() {
   return (
-    <>
+    <PageTransition>
       <PageIntro
         eyebrow="Part 01 — Diagnosis"
         title="Does this patient have chronic kidney disease?"
@@ -20,6 +21,6 @@ export default function Home() {
         disease now.
       </PageIntro>
       <Predictor api="/api" />
-    </>
+    </PageTransition>
   );
 }

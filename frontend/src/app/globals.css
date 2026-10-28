@@ -300,6 +300,105 @@ input[type="number"]::-webkit-outer-spin-button {
   animation-delay: 1s;
 }
 
+/* The red pen line under the current tab (Nav): a quick first pass, then a lighter second one. */
+.pen path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 0.4s ease-out 0.12s forwards;
+}
+.pen path:nth-child(2) {
+  animation-duration: 0.3s;
+  animation-delay: 0.42s;
+}
+
+/* The "report ready" slip (Toast) slides up into the corner and drops away when it is done.
+   Its bottom line runs out over 6 seconds; when it has, the slip leaves. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+}
+.toast-in {
+  animation: toast-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.toast-out {
+  animation: toast-out 0.2s ease-in both;
+}
+@keyframes drain {
+  to {
+    transform: scaleX(0);
+  }
+}
+.toast-drain {
+  animation: drain 6s linear both;
+}
+
+/* Switching part with the header tabs (PageTransition + the Nav links' transition types): the
+   old page fades out sliding away from the new tab, then the new page fades in sliding from
+   its side. The header is held still, so it is clear that only the page moved. */
+::view-transition {
+  pointer-events: none; /* clicks during the slide still reach the page */
+}
+::view-transition-old(.nav-forward) {
+  --slide-offset: -48px;
+  animation:
+    150ms ease-in both fade reverse,
+    400ms ease-in-out both slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: 48px;
+  animation:
+    210ms ease-out 150ms both fade,
+    400ms ease-in-out both slide;
+}
+::view-transition-old(.nav-back) {
+  --slide-offset: 48px;
+  animation:
+    150ms ease-in both fade reverse,
+    400ms ease-in-out both slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: -48px;
+  animation:
+    210ms ease-out 150ms both fade,
+    400ms ease-in-out both slide;
+}
+@keyframes fade {
+  from {
+    filter: blur(3px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+@keyframes slide {
+  from {
+    translate: var(--slide-offset);
+  }
+  to {
+    translate: 0;
+  }
+}
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
 /* Blood and urine start to flow once the drawing has finished. */
 @keyframes appear {
   to {
@@ -320,7 +419,19 @@ input[type="number"]::-webkit-outer-spin-button {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .draw-in path {
+  /* the report slip still needs its 6 seconds on screen - only its line runs down, nothing moves */
+  .toast-drain {
+    animation-duration: 6s !important;
+  }
+  /* switching part: the pages swap without sliding */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+  .draw-in path,
+  .pen path {
     stroke-dashoffset: 0;
   }
   .flow,

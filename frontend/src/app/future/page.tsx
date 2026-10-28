@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import PageIntro from "@/components/PageIntro";
+import PageTransition from "@/components/PageTransition";
 import Predictor from "@/components/Predictor";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 /** Part 2 - will the patient develop CKD in the coming years? */
 export default function FutureRisk() {
   return (
-    <>
+    <PageTransition>
       <PageIntro
         eyebrow="Part 02 — Future risk"
         title="Will this patient develop chronic kidney disease?"
@@ -27,6 +28,6 @@ export default function FutureRisk() {
         followed for up to 9 years at a hospital in the United Arab Emirates.
       </PageIntro>
       <Predictor api="/api/future" />
-    </>
+    </PageTransition>
   );
 }
