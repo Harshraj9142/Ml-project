@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import GfrStages from "@/components/GfrStages";
 import { Icon } from "@/components/Icons";
 import PatientForm from "@/components/PatientForm";
-import ResultPanel from "@/components/ResultPanel";
+import ResultPanel, { formatPercent } from "@/components/ResultPanel";
+import Toast, { type Notice } from "@/components/Toast";
 import { fetchMeta, predict, toFormValues, type FormValues, type Meta, type Prediction } from "@/lib/api";
 import { pause } from "@/lib/motion";
 
@@ -57,6 +58,7 @@ function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadId, setLoadId] = useState(0); // bumped when a sample case or reset fills the form
+  const [notice, setNotice] = useState<Notice | null>(null); // the "report ready" slip in the corner
   const resultRef = useRef<HTMLDivElement>(null);
   // Part 2 has an eGFR box: show where its value sits on the kidney-function stages
   const egfrField = meta.groups.flatMap((group) => group.fields).find((field) => /egfr/i.test(field.key));
@@ -83,8 +85,17 @@ function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
       const [prediction] = await Promise.all([predict(api, values, meta), pause(ANALYSIS_MS)]);
       setResult(prediction);
       setStale(false);
+      setNotice({
+        id: Date.now(),
+        tone: prediction.positive ? "high" : "low",
+        title: prediction.positive ? meta.labels.positive : meta.labels.negative,
+        value: formatPercent(prediction.probability_ckd),
+        detail: meta.labels.probability,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "The prediction failed.");
+      const message = err instanceof Error ? err.message : "The prediction failed.";
+      setError(message);
+      setNotice({ id: Date.now(), tone: "error", title: "Prediction failed", detail: message });
     } finally {
       setBusy(false);
     }
@@ -109,6 +120,7 @@ function RiskChecker({ api, meta }: { api: string; meta: Meta }) {
           {egfrField && <GfrStages value={values[egfrField.key] ?? ""} unit={egfrField.unit} />}
         </ResultPanel>
       </div>
+      {notice && <Toast key={notice.id} notice={notice} onDone={() => setNotice(null)} />}
     </div>
   );
 }

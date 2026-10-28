@@ -204,7 +204,7 @@ function ModelCard({ meta }: { meta: Meta }) {
   );
 }
 
-function formatPercent(p: number): string {
+export function formatPercent(p: number): string {
   if (p < 0.01) return "<1%";
   if (p > 0.99) return ">99%";
   return `${Math.round(p * 100)}%`;

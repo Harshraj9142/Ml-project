@@ -1,6 +1,8 @@
 import type { FormEvent } from "react";
 import { Icon } from "@/components/Icons";
+import InfoTip from "@/components/InfoTip";
 import type { Field, FormValues, Meta } from "@/lib/api";
+import { aboutText } from "@/lib/glossary";
 import { flagFor, referenceText, type Flag } from "@/lib/ranges";
 
 type Props = {
@@ -186,6 +188,7 @@ function Row({
 }) {
   const id = `field-${field.key}`;
   const reference = referenceText(field.key);
+  const about = aboutText(field.key);
   const flag = flagFor(field.key, value);
   const describedBy = [reference && `${id}-ref`, flag && `${id}-flag`].filter(Boolean).join(" ") || undefined;
   // after a sample case loads, each box flashes in turn, top to bottom (key={loadId} re-runs it)
@@ -199,15 +202,22 @@ function Row({
         flag ? "bg-risk-high-soft/60" : "hover:bg-surface-muted/50"
       }`}
     >
-      {field.kind === "choice" ? (
-        <span id={`${id}-label`} className="text-sm font-medium">
-          {field.label}
-        </span>
-      ) : (
-        <label htmlFor={id} className="text-sm font-medium">
-          {field.label}
-        </label>
-      )}
+      <div className="relative flex min-w-0 items-center gap-1">
+        {field.kind === "choice" ? (
+          <span id={`${id}-label`} className="text-sm font-medium">
+            {field.label}
+          </span>
+        ) : (
+          <label htmlFor={id} className="text-sm font-medium">
+            {field.label}
+          </label>
+        )}
+        {about && (
+          <InfoTip label={field.label}>
+            <TestNote field={field} about={about} reference={reference} value={value} flag={flag} />
+          </InfoTip>
+        )}
+      </div>
 
       <div className="col-span-2 sm:col-span-1">
         {field.kind === "choice" ? (
@@ -288,6 +298,60 @@ const FLAGS: Record<Exclude<Flag, null>, { mark: string; text: string; word: str
   low: { mark: "▼", text: "L", word: "low" },
   abnormal: { mark: "●", text: "ABN", word: "abnormal" },
 };
+
+/** The (i) note for one row: what the item is, its reference range, and this patient's value. */
+function TestNote({
+  field,
+  about,
+  reference,
+  value,
+  flag,
+}: {
+  field: Field;
+  about: string;
+  reference: string | null;
+  value: string;
+  flag: Flag;
+}) {
+  // the urine dipstick grades (unit "0-5") read better as a bare number
+  const unit = /^\d/.test(field.unit) ? "" : field.unit;
+  const answer =
+    field.kind === "choice"
+      ? field.options.find((option) => option.value === value)?.label
+      : value.trim() && `${value.trim()} ${unit}`.trim();
+  return (
+    <>
+      <p className="flex items-baseline justify-between gap-3 border-b border-border px-3.5 py-2 font-mono text-[0.6875rem] tracking-[0.12em] text-foreground uppercase">
+        {field.label}
+        {field.unit && <span className="shrink-0 tracking-normal text-muted normal-case">{field.unit}</span>}
+      </p>
+      <p className="px-3.5 py-2.5 text-sm leading-relaxed text-foreground">{about}</p>
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 border-t border-border bg-surface-muted/60 px-3.5 py-2 font-mono text-xs">
+        {reference && (
+          <>
+            <dt className="text-muted">Reference</dt>
+            <dd>{reference}</dd>
+          </>
+        )}
+        <dt className="text-muted">This patient</dt>
+        <dd>
+          {answer || <span className="text-muted">not measured</span>}
+          {flag ? (
+            <span className="font-semibold text-risk-high">
+              {" "}
+              <span aria-hidden className="text-[0.5rem]">
+                {FLAGS[flag].mark}
+              </span>{" "}
+              {FLAGS[flag].word}
+            </span>
+          ) : (
+            reference && answer && <span className="text-risk-low"> · in range</span>
+          )}
+        </dd>
+      </dl>
+    </>
+  );
+}
 
 /** H / L / ABN tag, like the flag column of a printed lab report. */
 function FlagMark({ id, flag }: { id: string; flag: Exclude<Flag, null> }) {
