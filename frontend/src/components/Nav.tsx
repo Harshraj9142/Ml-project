@@ -7,13 +7,15 @@ import { useLayoutEffect, useRef, useState } from "react";
 const PAGES = [
   { href: "/", number: "01", label: "Diagnosis" },
   { href: "/future", number: "02", label: "Future risk" },
+  { href: "/method", number: "03", label: "Method" },
 ];
 
 /**
  * Tabs along the bottom edge of the header. The current part is underlined with a red pen
  * stroke that slides over and draws itself again when you switch part (adapted from the
  * "Sketch Tabs" component on 21st.dev). Each link also tells the page which way to slide:
- * towards Part 02 is "nav-forward", back towards Part 01 is "nav-back" (see PageTransition).
+ * towards a later part is "nav-forward", back towards an earlier one is "nav-back" (see
+ * PageTransition).
  */
 export default function Nav() {
   const pathname = usePathname();

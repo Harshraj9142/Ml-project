@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSettled } from "@/lib/motion";
 
 // A kidney seen from the front, drawn with its hilum (the notch where vessels and ureter
 // join) on the right. All shapes share one 200 x 240 coordinate box.
@@ -25,13 +25,7 @@ export function KidneyMark({ className = "h-8 w-auto" }: { className?: string })
 
 /** Line drawing for the page header: the kidney draws itself in, with a few labelled parts. */
 export function KidneyFigure({ caption }: { caption: string }) {
-  // Once the draw-in has finished, drop the animation classes so the finished drawing stays put
-  // (otherwise a window resize or a full-page screenshot can restart it half-drawn).
-  const [settled, setSettled] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setSettled(true), 3300);
-    return () => clearTimeout(timer);
-  }, []);
+  const settled = useSettled(3300); // the draw-in has finished
 
   return (
     <figure className="text-muted">
@@ -77,7 +71,7 @@ export function KidneyFigure({ caption }: { caption: string }) {
 }
 
 /** Two dots travelling along `path` forever, half a lap apart, fading in and out at the ends. */
-function Flow({ path, seconds, className, r = 2.4 }: { path: string; seconds: number; className?: string; r?: number }) {
+export function Flow({ path, seconds, className, r = 2.4 }: { path: string; seconds: number; className?: string; r?: number }) {
   return (
     <g className={className} fill="currentColor">
       {[0, 0.5].map((offset) => {

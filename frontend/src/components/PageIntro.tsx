@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 import CountUp from "@/components/CountUp";
 import { KidneyFigure } from "@/components/Kidney";
 
@@ -6,12 +6,13 @@ type Props = {
   eyebrow: string;
   title: string;
   facts: { value: string; label: string }[]; // key numbers about the data, shown under the text
-  figure: string; // caption for the kidney drawing beside the title on wide screens
+  figure: string; // caption for the drawing beside the title on wide screens
+  Drawing?: ComponentType<{ caption: string }>; // that drawing: the kidney unless a page picks another
   children: ReactNode; // the description
 };
 
 /** The title block at the top of each page; its parts rise in one after another. */
-export default function PageIntro({ eyebrow, title, facts, figure, children }: Props) {
+export default function PageIntro({ eyebrow, title, facts, figure, Drawing = KidneyFigure, children }: Props) {
   return (
     <header className="mb-12 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div>
@@ -46,7 +47,7 @@ export default function PageIntro({ eyebrow, title, facts, figure, children }: P
         </dl>
       </div>
       <div className="rise hidden lg:block" style={{ animationDelay: "120ms" }}>
-        <KidneyFigure caption={figure} />
+        <Drawing caption={figure} />
       </div>
     </header>
   );

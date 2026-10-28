@@ -43,6 +43,9 @@
   --stage-4: #9f4434;
   --stage-5: #802f22;
   --stage-6: #5e1f16;
+  /* the other algorithms' bars on the Method page, next to the chosen one in kidney red
+     (3:1 against the sheet, and clearly apart from the red for colour-blind readers) */
+  --bar-quiet: #968873;
   --sheet-shadow: 0 1px 0 rgb(60 40 20 / 0.04), 0 14px 32px -20px rgb(60 40 20 / 0.3);
 }
 
@@ -81,6 +84,7 @@
     --stage-4: #c67a6c;
     --stage-5: #dd9384;
     --stage-6: #f2ae9f;
+    --bar-quiet: #6f685d;
     --sheet-shadow: 0 1px 0 rgb(0 0 0 / 0.4);
   }
 }
@@ -114,6 +118,7 @@
   --color-stage-4: var(--stage-4);
   --color-stage-5: var(--stage-5);
   --color-stage-6: var(--stage-6);
+  --color-bar-quiet: var(--bar-quiet);
   --shadow-sheet: var(--sheet-shadow);
   --font-sans: var(--font-plex-sans);
   --font-serif: var(--font-source-serif);

@@ -23,6 +23,20 @@ export function useCountUp(target: number, duration = 900): number {
   return value;
 }
 
+/**
+ * False until `ms` milliseconds after mounting, then true. The page drawings use it to drop
+ * their draw-in animation once it has finished, so the finished drawing stays put (otherwise a
+ * window resize or a full-page screenshot can restart it half-drawn).
+ */
+export function useSettled(ms: number): boolean {
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(true), ms);
+    return () => clearTimeout(timer);
+  }, [ms]);
+  return settled;
+}
+
 /** Resolves after `ms` milliseconds - or at once for reduced motion. */
 export function pause(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, prefersReducedMotion() ? 0 : ms));

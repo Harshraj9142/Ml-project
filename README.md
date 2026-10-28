@@ -29,7 +29,9 @@ Ml Lab Project/
 ├── frontend/                  Next.js 16 web app (the user interface)
 │   ├── src/app/page.tsx         Part 1 page (/): does the patient have CKD now?
 │   ├── src/app/future/page.tsx  Part 2 page (/future): will the patient develop CKD?
-│   ├── src/components/          Nav (Part 1 / Part 2 tabs), Predictor, PatientForm, ResultPanel
+│   ├── src/app/method/page.tsx  Method page (/method): why logistic regression, how it works, full flow
+│   ├── src/components/          Nav (page tabs), Predictor, PatientForm, ResultPanel, ModelLedger, FlowChart
+│   ├── src/lib/evidence.ts      the Method page's numbers, copied from reports/ (+ charts in src/figures/)
 │   ├── src/lib/api.ts           talks to backend/api.py
 │   └── next.config.ts           forwards /api/* to backend/api.py
 ├── streamlit_app/
@@ -95,13 +97,16 @@ npm install          # first time only (needs Node.js 20.9 or newer)
 npm run dev
 ```
 
-Then open http://localhost:3000. The tabs at the top switch between the two pages:
+Then open http://localhost:3000. The tabs at the top switch between the three pages:
 
 - **Part 1 · Diagnose CKD** (`/`) - 24 routine blood/urine tests -> probability of CKD now
 - **Part 2 · Future risk** (`/future`) - age, history, medicines, eGFR, blood pressure ... ->
   risk score for developing CKD stage 3-5 later (needs `python ml/future_ckd.py` run once)
+- **Method** (`/method`) - why logistic regression was chosen over the other course algorithms,
+  how it works (with a worked example), and the full flow from raw data to the answer on screen.
+  Its numbers and charts are copies of `reports/`; re-copy them if you change and re-run the scripts.
 
-Both pages have example-patient buttons for demos. Restart terminal 1 after re-training a model.
+Both prediction pages have example-patient buttons for demos. Restart terminal 1 after re-training a model.
 
 If `npm install` fails with `EACCES ... _cacache`, your npm cache has files owned by root
 (an old npm bug). Fix it once with `sudo chown -R $(id -u):$(id -g) ~/.npm`, then retry.
@@ -156,7 +161,7 @@ UCI Chronic Kidney Disease dataset - 400 patients from India (250 CKD, 150 not C
 9. **Clustering** - k-means and DBSCAN on all patients with the diagnosis hidden: do
    patients group into CKD / not CKD by themselves?
 10. **Deployment** - both models saved with joblib, served by a FastAPI web API (`backend/api.py`) to
-    a two-page Next.js web app (`frontend/`); a simpler Streamlit form (`streamlit_app/app.py`) uses the Part 1 model.
+    a three-page Next.js web app (`frontend/`); a simpler Streamlit form (`streamlit_app/app.py`) uses the Part 1 model.
 
 ## Results
 
